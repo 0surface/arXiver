@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Scraper.Domain.AggregatesModel.PaperAggregate
 {
-    public class Paper
+    public class Article
         : Entity
     {
         public string ArxivId { get; private set; }
@@ -30,13 +30,13 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
         public IReadOnlyCollection<Version> Versions => _versions;
 
 
-        protected Paper()
+        protected Article()
         {
             _authors = new List<Author>();
             _versions = new List<Version>();
         }
 
-        public Paper(string arxivId, string htmlLink, string title, string abstractText, string comments, string subjects,
+        public Article(string arxivId, string htmlLink, string title, string abstractText, string comments, string subjects,
             string journalReference, string journalReferenceHtmlLink)
         {
             ArxivId = arxivId;
