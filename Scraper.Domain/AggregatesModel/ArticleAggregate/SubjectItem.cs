@@ -5,7 +5,7 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
 {
     public class SubjectItem : ValueObject
     {
-        public string SujectCode { get; private set; }
+        public string SubjectCode { get; private set; }
         public string Name { get; private set; }
         public bool IsMainSubject { get; private set; }
 
@@ -13,14 +13,14 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
 
         public SubjectItem(string arxivId, string name, bool isMainSubject)
         {
-            SujectCode = arxivId;
+            SubjectCode = arxivId;
             Name = name;
             IsMainSubject = isMainSubject;
         }
 
         protected override IEnumerable<object> GetAtomicValues()
         {
-            yield return SujectCode;
+            yield return SubjectCode;
             yield return Name;
             yield return IsMainSubject;
         }

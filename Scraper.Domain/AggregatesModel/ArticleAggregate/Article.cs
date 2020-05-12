@@ -7,7 +7,7 @@ using System.Linq;
 namespace Scraper.Domain.AggregatesModel.PaperAggregate
 {
     public class Article
-        : Entity
+        : Entity, IAggregateRoot
     {
         public string ArxivId { get; private set; }
         public string HtmlLink { get; private set; }
@@ -84,7 +84,7 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
 
         public void AddSubject(string subjectCode, string name, bool isMainSubject)
         {
-            var existingSubjectForPaper = _subjects.Where(s => s.SujectCode == subjectCode).SingleOrDefault();
+            var existingSubjectForPaper = _subjects.Where(s => s.SubjectCode == subjectCode).SingleOrDefault();
 
             if(existingSubjectForPaper == null)
             {
