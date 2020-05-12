@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Scraper.Domain.AggregatesModel.SubjectAggregate
 {
     public class Subject
-        : Entity
+        : Entity, IAggregateRoot
     {
         public string SubjectCode { get; private set; }
         public string FullName { get; private set; }
