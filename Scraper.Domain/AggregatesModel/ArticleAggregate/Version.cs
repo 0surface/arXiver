@@ -10,18 +10,22 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
         public string HtmlLink { get; private set; }
         public DateTime SubmissionDate { get; private set; }
         public string Tag { get; private set; }
-        public string SubjectId { get; private set; }
-        public bool IsLatest { get; private set; }        
+        public string CitationSubjectCode { get; private set; }
+        public int SizeInKiloBytes { get; private set; }
+        public bool IsLatest { get; private set; }
+        
 
         public Version() { }
 
-        public Version(string arxivId, string htmlLink, DateTime submissionDate,  string tag, string subjectId, bool isLatest)
+        public Version(string arxivId, string htmlLink, DateTime submissionDate
+            , string tag, string citationSubjectCode, int sizeInKiloBytes, bool isLatest)
         {
             ArxivId = arxivId;
             HtmlLink = htmlLink;
             SubmissionDate = submissionDate;
             Tag = tag;
-            SubjectId = subjectId;
+            CitationSubjectCode = citationSubjectCode;
+            SizeInKiloBytes = sizeInKiloBytes;
             IsLatest = isLatest;            
         }
 
@@ -32,9 +36,11 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
             yield return HtmlLink;
             yield return SubmissionDate;
             yield return Tag; 
-            yield return SubjectId;
+            yield return CitationSubjectCode;
+            yield return SizeInKiloBytes;
             yield return IsLatest;            
         }
     }
 }
+
 

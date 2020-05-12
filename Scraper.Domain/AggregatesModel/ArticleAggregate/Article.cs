@@ -1,4 +1,5 @@
-﻿using Scraper.Domain.SeedWork;
+﻿using Scraper.Domain.AggregatesModel.ArticleAggregate;
+using Scraper.Domain.SeedWork;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +13,7 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
         public string HtmlLink { get; private set; }
         public string Title { get; private set; }
         public string AbstractText { get; private set; }
-
         public string Comments { get; private set; }
-        public string Subjects { get; private set; }
-
         public string JournalReference { get; private set; }
         public string JournalReferenceHtmlLink { get; private set; }
 
@@ -29,11 +27,15 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
         private readonly List<Version> _versions;
         public IReadOnlyCollection<Version> Versions => _versions;
 
+        private List<SubjectItem> _subjects;
+        public IReadOnlyCollection<SubjectItem> Subjects => _subjects;
+
 
         protected Article()
         {
             _authors = new List<Author>();
             _versions = new List<Version>();
+            _subjects = new List<SubjectItem>();
         }
 
         public Article(string arxivId, string htmlLink, string title, string abstractText, string comments, string subjects,
@@ -44,7 +46,6 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
             Title = title;
             AbstractText = abstractText;
             Comments = comments;
-            Subjects = subjects;
             JournalReference = journalReference;
             JournalReferenceHtmlLink = journalReferenceHtmlLink;
         }
@@ -60,12 +61,13 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
             }
         }
 
-        public void AddVersion(string arxivId, string htmlLink, DateTime submissionDate, string tag, string subjectId, bool isLatest = true)
+        public void AddVersion(string arxivId, string htmlLink, DateTime submissionDate, string tag
+            , string citationSubjectCode, int sizeInKiloBytes, bool isLatest = true)
         {
 
             if (_versions == null || _versions.Count == 0)
             {
-                var version = new Version(arxivId, htmlLink, submissionDate, tag, subjectId, isLatest);
+                var version = new Version(arxivId, htmlLink, submissionDate, tag, citationSubjectCode, sizeInKiloBytes, isLatest);
                 _versions.Add(version);
             }
             else
@@ -74,10 +76,21 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
 
                 if (existingVersionForThisPaper == null)
                 {
-                    var version = new Version(arxivId, htmlLink, submissionDate, tag, subjectId, isLatest);
+                    var version = new Version(arxivId, htmlLink, submissionDate, tag, citationSubjectCode, sizeInKiloBytes, isLatest);
                     _versions.Add(version);
                 }
             }
+        }
+
+        public void AddSubject(string subjectCode, string name, bool isMainSubject)
+        {
+            var existingSubjectForPaper = _subjects.Where(s => s.SujectCode == subjectCode).SingleOrDefault();
+
+            if(existingSubjectForPaper == null)
+            {
+                _subjects.Add(new SubjectItem(subjectCode, name, isMainSubject));
+            }
+
         }
     }
 }
