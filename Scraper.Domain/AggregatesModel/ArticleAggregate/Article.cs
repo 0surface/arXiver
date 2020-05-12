@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Scraper.Domain.AggregatesModel.PaperAggregate
+namespace Scraper.Domain.AggregatesModel.ArticleAggregate
 {
     public class Article
         : Entity, IAggregateRoot
@@ -20,22 +20,22 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
         // DDD Patterns comment
         // Using a private collection field, better for DDD Aggregate's encapsulation
         // so Authors cannot be added from "outside the AggregateRoot" directly to the collection,
-        // but only through the method PaperAggrergateRoot.AddAuthor() which includes behaviour.
+        // but only through the method ArticleAggrergateRoot.AddAuthor() which includes behaviour.
         private readonly List<Author> _authors;
         public IReadOnlyCollection<Author> Authors => _authors;
 
         private readonly List<Version> _versions;
         public IReadOnlyCollection<Version> Versions => _versions;
 
-        private List<SubjectItem> _subjects;
-        public IReadOnlyCollection<SubjectItem> Subjects => _subjects;
+        private List<SubjectItem> _subjectItems;
+        public IReadOnlyCollection<SubjectItem> SubjectItems => _subjectItems;
 
 
         protected Article()
         {
             _authors = new List<Author>();
             _versions = new List<Version>();
-            _subjects = new List<SubjectItem>();
+            _subjectItems = new List<SubjectItem>();
         }
 
         public Article(string arxivId, string htmlLink, string title, string abstractText, string comments, string subjects,
@@ -72,7 +72,7 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
             }
             else
             {
-                var existingVersionForThisPaper = _versions.Where(v => v.ArxivId == arxivId).SingleOrDefault();
+                var existingVersionForThisPaper = _versions.Where(v => v.VersionId == arxivId).SingleOrDefault();
 
                 if (existingVersionForThisPaper == null)
                 {
@@ -84,11 +84,11 @@ namespace Scraper.Domain.AggregatesModel.PaperAggregate
 
         public void AddSubject(string subjectCode, string name, bool isMainSubject)
         {
-            var existingSubjectForPaper = _subjects.Where(s => s.SubjectCode == subjectCode).SingleOrDefault();
+            var existingSubjectForPaper = _subjectItems.Where(s => s.SubjectCode == subjectCode).SingleOrDefault();
 
             if(existingSubjectForPaper == null)
             {
-                _subjects.Add(new SubjectItem(subjectCode, name, isMainSubject));
+                _subjectItems.Add(new SubjectItem(subjectCode, name, isMainSubject));
             }
 
         }

@@ -1,9 +1,9 @@
 ﻿using Scraper.Domain.SeedWork;
-using System.Collections.Generic;
 
 namespace Scraper.Domain.AggregatesModel.ArticleAggregate
 {
-    public class SubjectItem : ValueObject
+    public class SubjectItem
+        : Entity
     {
         public string SubjectCode { get; private set; }
         public string Name { get; private set; }
@@ -11,18 +11,11 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
 
         public SubjectItem() { }
 
-        public SubjectItem(string arxivId, string name, bool isMainSubject)
+        public SubjectItem(string subjectCode, string name, bool isMainSubject)
         {
-            SubjectCode = arxivId;
+            SubjectCode = subjectCode;
             Name = name;
             IsMainSubject = isMainSubject;
-        }
-
-        protected override IEnumerable<object> GetAtomicValues()
-        {
-            yield return SubjectCode;
-            yield return Name;
-            yield return IsMainSubject;
         }
     }
 }
