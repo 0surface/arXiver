@@ -82,13 +82,13 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
             }
         }
 
-        public void AddSubject(string subjectCode, string name, bool isMainSubject)
+        public void AddSubject(string subjectCode, string name, bool isPrimarySubject)
         {
             var existingSubjectForPaper = _subjectItems.Where(s => s.SubjectCode == subjectCode).SingleOrDefault();
 
             if(existingSubjectForPaper == null)
             {
-                _subjectItems.Add(new SubjectItem(subjectCode, name, isMainSubject));
+                _subjectItems.Add(new SubjectItem(subjectCode, name, isPrimarySubject));
             }
 
         }

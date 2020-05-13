@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="InfraStructure\TestData\**" />
+    <EmbeddedResource Remove="InfraStructure\TestData\**" />
+    <None Remove="InfraStructure\TestData\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="InfraStructure\RawSubjectList.html" />
+    <None Remove="Service\TestData\ArticleListTestHtmlData.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.23" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="xunit" Version="2.4.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
+    <PackageReference Include="coverlet.collector" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Scraper.Infrastructure\Scraper.Infrastructure.csproj" />
+    <ProjectReference Include="..\Scraper.Service\Scraper.Service.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Service\TestData\ArticleListTestHtmlData.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="InfraStructure\" />
+  </ItemGroup>
+
+</Project>

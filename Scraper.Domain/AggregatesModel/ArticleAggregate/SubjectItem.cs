@@ -7,13 +7,13 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
     {
         public string SubjectCode { get; private set; }
         public string Name { get; private set; }
-        public bool IsMainSubject { get; private set; }
+        public bool IsPrimarySubject { get; private set; }
 
-        public SubjectItem(string subjectCode, string name, bool isMainSubject)
+        public SubjectItem(string subjectCode, string name, bool isPrimarySubject)
         {
             SubjectCode = subjectCode;
             Name = name;
-            IsMainSubject = isMainSubject;
+            IsPrimarySubject = isPrimarySubject;
         }
     }
 }
