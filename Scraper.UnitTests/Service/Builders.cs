@@ -24,7 +24,7 @@ namespace Scraper.UnitTests.Service
             public static string ArticleListRawHtml()
             {
                 var assembly = Assembly.GetExecutingAssembly();
-                string resourceName = "Scraper.UnitTests.InfraStructure.TestData.ArticleListTestHtmlData.html";
+                string resourceName = "Scraper.UnitTests.Service.TestData.ArticleListTestHtmlData.html";
                 string testData = "";
 
                 using (Stream stream = assembly.GetManifestResourceStream(resourceName))
