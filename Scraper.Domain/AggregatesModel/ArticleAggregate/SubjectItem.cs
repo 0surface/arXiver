@@ -9,8 +9,6 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
         public string Name { get; private set; }
         public bool IsMainSubject { get; private set; }
 
-        public SubjectItem() { }
-
         public SubjectItem(string subjectCode, string name, bool isMainSubject)
         {
             SubjectCode = subjectCode;

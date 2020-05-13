@@ -14,9 +14,6 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
         public int SizeInKiloBytes { get; private set; }
         public bool IsLatest { get; private set; }
 
-
-        public Version() { }
-
         public Version(string versionId, string htmlLink, DateTime submissionDate
             , string tag, string citationSubjectCode, int sizeInKiloBytes, bool isLatest)
         {
