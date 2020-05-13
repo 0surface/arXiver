@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
 using Scraper.Service.Scrapers;
+using Scraper.Types.Service;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -27,6 +28,23 @@ namespace Scraper.UnitTests.Service
 
             //Act
             var sut = scraper.GetArticleListEntryCount(doc, identifierStrings, articleListCountSelector);
+
+            //Assert
+            Assert.Equal(sut, expected);
+        }
+
+        [Fact]
+        public void Get_article_list_count_as_dto_collection()
+        {
+            //Arrange
+            HtmlDocument doc = _articleListTestBuilder.ArticleListHtmlDocument();
+            IArticleListScraper scraper = new ArticleListScraper();
+
+            int expected = 25;
+
+            //Act
+
+            var sut = scraper.GetArticleList(doc).Count;
 
             //Assert
             Assert.Equal(sut, expected);

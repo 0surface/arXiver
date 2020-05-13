@@ -33,5 +33,27 @@ namespace Scraper.Service.Util
             }
         }
 
+        /// <summary>
+        /// Returns HtmlNode matching the passed node name
+        /// </summary>
+        /// <param name="htmlNode">HtmlAgilityPack HtmlNode object</param>
+        /// <param name="currnetNodeName">string </param>
+        /// <returns>HtmlNode object</returns>
+        public static HtmlNode GetNextSibling(HtmlNode htmlNode, string currnetNodeName)
+        {
+            var currentNode = htmlNode;
+
+            while(currentNode != null)
+            {
+                currentNode = currentNode.NextSibling;
+
+                if (currentNode != null &&  currentNode.NodeType == HtmlNodeType.Element 
+                    && currentNode.Name == currnetNodeName)
+                    return currentNode;
+            }
+
+            return null;
+        }
+
     }
 }
