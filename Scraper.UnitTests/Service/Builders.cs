@@ -1,9 +1,6 @@
 ﻿using HtmlAgilityPack;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 
 namespace Scraper.UnitTests.Service
 {
@@ -38,7 +35,7 @@ namespace Scraper.UnitTests.Service
             }
 
             public HtmlDocument ArticleList_withAbstract_HtmlDocument()
-            {                
+            {
                 doc.LoadHtml(ArticleListRawHtml(true));
                 return doc;
             }
@@ -53,7 +50,7 @@ namespace Scraper.UnitTests.Service
             public static int FailCaseArticleListCount => 0;
             public string WithAbstractHtml_ArticleItem2_AbstractText()
             {
-               return  @"Bitcoin represents one of the most interesting technological breakthroughs
+                return @"Bitcoin represents one of the most interesting technological breakthroughs
                             and socio-economic experiments of the last decades. In this paper, we examine
                             the role of speculative bubbles in the process of Bitcoin's technological
                             adoption by analyzing its social dynamics. We trace Bitcoin's genesis and
@@ -64,7 +61,7 @@ namespace Scraper.UnitTests.Service
                             essential component in the process of technological innovation. We argue that a
                             hierarchy of repeating and exponentially increasing series of bubbles and hype
                             cycles, which has occurred over the past decade since its inception, has
-                            bootstrapped Bitcoin into existence.";             
+                            bootstrapped Bitcoin into existence.";
             }
 
 

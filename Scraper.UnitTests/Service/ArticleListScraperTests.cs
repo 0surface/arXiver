@@ -1,9 +1,5 @@
 ﻿using HtmlAgilityPack;
 using Scraper.Service.Scrapers;
-using Scraper.Types.Service;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Xunit;
 using static Scraper.UnitTests.Service.Builders;
 
@@ -23,7 +19,7 @@ namespace Scraper.UnitTests.Service
         public void Gets_article_list_Entry_Count_in_htmlDoc(string articleListCountSelector, string[] identifierStrings, int expected)
         {
             //Arrange
-            HtmlDocument doc = _articleListTestBuilder.ArticleList_withoutAbstract_HtmlDocument();            
+            HtmlDocument doc = _articleListTestBuilder.ArticleList_withoutAbstract_HtmlDocument();
 
             //Act
             var sut = _scraper.GetArticleListEntryCount(doc, identifierStrings, articleListCountSelector);
