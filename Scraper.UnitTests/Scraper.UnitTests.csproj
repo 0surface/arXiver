@@ -14,7 +14,8 @@
 
   <ItemGroup>
     <None Remove="InfraStructure\RawSubjectList.html" />
-    <None Remove="Service\TestData\ArticleListTestHtmlData.html" />
+    <None Remove="Service\TestData\ArticleList_WithAbstract_TestHtmlData.html" />
+    <None Remove="Service\TestData\ArticleList_WithoutAbstract_TestHtmlData.html" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,7 +32,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Service\TestData\ArticleListTestHtmlData.html" />
+    <EmbeddedResource Include="Service\TestData\ArticleList_WithAbstract_TestHtmlData.html" />
+    <EmbeddedResource Include="Service\TestData\ArticleList_WithoutAbstract_TestHtmlData.html" />
   </ItemGroup>
 
   <ItemGroup>
