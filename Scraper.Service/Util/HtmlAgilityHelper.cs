@@ -1,6 +1,5 @@
 ﻿using HtmlAgilityPack;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,15 +43,6 @@ namespace Scraper.Service.Util
             return null;
         }
 
-        public static List<HtmlNode> GetChildNodesByName (this HtmlNode node, string name)
-        {
-            if(node !=null && node.HasChildNodes)
-            {
-                return node.ChildNodes.Where(x => x.Name == name).ToList();
-            }
-            return null;
-        }
-
         public static bool AttributeExists(this HtmlAttributeCollection collection, string name, string value)
         {
             if (collection == null) return false;
@@ -61,39 +51,5 @@ namespace Scraper.Service.Util
 
             return (attr != null && attr.Value == value);
         }
-
-        /// <summary>
-        ///  Returns the inner text value of the htmlNode   
-        /// </summary>
-        /// <param name="htmlNode">HtmlNode</param>
-        /// <param name="xpath">string </param>
-        /// <returns>string</returns>
-        public static string TryParseInnerText(this HtmlNode htmlNode, string xpath)
-        {
-            try
-            {
-                if (htmlNode != null)
-                {
-                    return htmlNode.SelectSingleNode(xpath).InnerText ?? string.Empty;
-                }
-            }
-            catch (Exception) { }
-
-            return string.Empty;
-        }
-
-        public static string TextfromOneNode(this HtmlNode node, string xmlPath)
-        {
-            string toReturn = "";
-            var navigator = (HtmlAgilityPack.HtmlNodeNavigator)node.CreateNavigator();
-            var result = navigator.SelectSingleNode(xmlPath);
-            if (result != null)
-            {
-                toReturn = result.Value;
-            }
-            return toReturn;
-        }
-
-        
     }
 }
