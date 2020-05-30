@@ -1,8 +1,5 @@
 ﻿using HtmlAgilityPack;
 using Scraper.Service.Scrapers;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Xunit;
 using static Scraper.UnitTests.Service.Builders;
 
@@ -21,9 +18,11 @@ namespace Scraper.UnitTests.Service
             var expected = _testBuilder.Article_1_Title;
 
             //Act
+            //TODO: add test
             //var sut = _scraper.GetArticle()
 
             //Assert
+            Assert.Equal(1, 1);
 
         }
     }
