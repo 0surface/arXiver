@@ -21,6 +21,8 @@ namespace Scraper.Service.Scrapers
 
             var raw = doc.ToString();
 
+            //TODO : 
+
             return dto;
         }
 

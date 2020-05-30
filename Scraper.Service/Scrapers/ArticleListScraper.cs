@@ -14,9 +14,9 @@ namespace Scraper.Service.Scrapers
 		int GetArticleListEntryCount(HtmlDocument htmlDocument, string[] identifierStrings
 			, string articleListCountSelector = "//small");
 
-		List<ArticleScrapedDataDto> GetArticleList(HtmlDocument htmlDocument, bool includeAbstract);
+		List<ArticleItemDto> GetArticleList(HtmlDocument htmlDocument, bool includeAbstract);
 
-		Task<List<ArticleScrapedDataDto>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
+		Task<List<ArticleItemDto>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
 	}
 
 	public class ArticleListScraper : IArticleListScraper
@@ -65,7 +65,7 @@ namespace Scraper.Service.Scrapers
 			}
 		}
 
-		public List<ArticleScrapedDataDto> GetArticleList(HtmlDocument htmlDocument, bool includeAbstract = true)
+		public List<ArticleItemDto> GetArticleList(HtmlDocument htmlDocument, bool includeAbstract = true)
 		{
 			var parseMain = (from info in htmlDocument.DocumentNode.SelectNodes("//div[@id='dlpage']")
 							 from h3Element in info.SelectNodes("h3")
@@ -82,7 +82,7 @@ namespace Scraper.Service.Scrapers
 								 dd = dlElement.Descendants("dd")
 							 }).ToList();
 
-			List<ArticleScrapedDataDto> result = new List<ArticleScrapedDataDto>();
+			List<ArticleItemDto> result = new List<ArticleItemDto>();
 
 			int loopCount = parseMain.Count();
 
@@ -103,21 +103,19 @@ namespace Scraper.Service.Scrapers
 			return result;
 		}
 
-		public async Task<List<ArticleScrapedDataDto>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken)
-		{
-			HtmlWeb web = new HtmlWeb();
-
-			HtmlDocument doc = await web.LoadFromWebAsync(url, cancellationToken);
+		public async Task<List<ArticleItemDto>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken)
+		{			
+			HtmlDocument doc = await HtmlAgilityHelper.GetHtmlDocument(url, cancellationToken);
 
 			return (doc != null) ? GetArticleList(doc, includeAbstract)
-						: new List<ArticleScrapedDataDto>();
+						: new List<ArticleItemDto>();
 		}
 
 		#region Private
 
-		private List<ArticleScrapedDataDto> ProcessElems(string h3text, HtmlNode[] dtelem_list, HtmlNode[] ddelem_list, bool includeAbstract)
+		private List<ArticleItemDto> ProcessElems(string h3text, HtmlNode[] dtelem_list, HtmlNode[] ddelem_list, bool includeAbstract)
 		{
-			List<ArticleScrapedDataDto> result = new List<ArticleScrapedDataDto>();
+			List<ArticleItemDto> result = new List<ArticleItemDto>();
 
 			if (dtelem_list == null || dtelem_list.Length < 1
 				|| ddelem_list == null || ddelem_list.Length < 1)
@@ -134,7 +132,7 @@ namespace Scraper.Service.Scrapers
 					dddesc = ddelem_list[i].Descendants()
 				};
 
-				ArticleScrapedDataDto dto = new ArticleScrapedDataDto();
+				ArticleItemDto dto = new ArticleItemDto();
 
 				dto.DisplayDate = item.pub_date;
 				dto.ArxivId = _GetDtElementInnerText(item.dtdesc, "Abstract");
@@ -156,7 +154,7 @@ namespace Scraper.Service.Scrapers
 			return result;
 		}
 
-		private List<ScrapedAuthorDto> _GetDDElementAuthors(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue)
+		private List<AuthorDto> _GetDDElementAuthors(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue)
 		{
 			var authorNodes = nodes
 				?.Where(a => a.HasAttributes && a.Name == tag && a.Attributes.AttributeExists("class", attributeValue))
@@ -165,13 +163,13 @@ namespace Scraper.Service.Scrapers
 				?.Where(a => a.Name == "a")
 				?.ToList();
 
-			List<ScrapedAuthorDto> authors = new List<ScrapedAuthorDto>();
+			List<AuthorDto> authors = new List<AuthorDto>();
 			if (authorNodes == null || authorNodes.Count < 1)
 				return authors;
 
 			foreach (var node in authorNodes)
 			{
-				authors.Add(new ScrapedAuthorDto()
+				authors.Add(new AuthorDto()
 				{
 					FullName = node.InnerText.Trim(),
 					ContextUrl = node.GetAttributeValue("href", "")
@@ -182,7 +180,7 @@ namespace Scraper.Service.Scrapers
 
 		}
 
-		private List<ScrapedArticleListSubjectDto> _GetDDElementSubjects(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue, string repalceWith = "")
+		private List<SubjectItemDto> _GetDDElementSubjects(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue, string repalceWith = "")
 		{
 			var subjNode = nodes
 				?.Where(a => a.HasAttributes && a.Name == tag && a.Attributes.AttributeExists("class", attributeValue))
@@ -190,7 +188,7 @@ namespace Scraper.Service.Scrapers
 
 			return subjNode != null ?
 				_GetSubjectArray(subjNode.InnerText?.Trim())
-				: new List<ScrapedArticleListSubjectDto>();
+				: new List<SubjectItemDto>();
 		}
 
 		private string[] _GetDDElementPrimarySubject(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue, string repalceWith = "")
@@ -365,17 +363,17 @@ namespace Scraper.Service.Scrapers
 			return result;
 		}
 
-		private List<ScrapedArticleListSubjectDto> _GetSubjectArray(string input)
+		private List<SubjectItemDto> _GetSubjectArray(string input)
 		{
-			List<ScrapedArticleListSubjectDto> dto
-			   = new List<ScrapedArticleListSubjectDto>();
+			List<SubjectItemDto> dto
+			   = new List<SubjectItemDto>();
 
 			if (string.IsNullOrEmpty(input)) return dto;
 
 			input.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
 				 .Select(x => x.Split(new char[] { '(' }).ToArray())
 					.ToList()
-					.ForEach(arr => dto.Add(new ScrapedArticleListSubjectDto()
+					.ForEach(arr => dto.Add(new SubjectItemDto()
 					{
 						Description = arr[0].Replace("Subjects:", ""),
 						Code = arr.Length > 1 ? arr[1].Replace(")", "") : string.Empty,
@@ -384,9 +382,9 @@ namespace Scraper.Service.Scrapers
 			return dto;
 		}
 
-		private List<ScrapedAuthorDto> _GetAuthors(HtmlNode authorNode)
+		private List<AuthorDto> _GetAuthors(HtmlNode authorNode)
 		{
-			List<ScrapedAuthorDto> authors = new List<ScrapedAuthorDto>();
+			List<AuthorDto> authors = new List<AuthorDto>();
 			var authorNodes = authorNode.ChildNodes.Where(n => n.Name == "a").ToList();
 
 			if (authorNodes == null || authorNodes.Count < 1)
@@ -394,7 +392,7 @@ namespace Scraper.Service.Scrapers
 
 			foreach (var node in authorNodes)
 			{
-				authors.Add(new ScrapedAuthorDto()
+				authors.Add(new AuthorDto()
 				{
 					FullName = node.InnerText.Trim(),
 					ContextUrl = node.GetAttributeValue("href", "")
