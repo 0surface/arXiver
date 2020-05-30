@@ -21,7 +21,7 @@ namespace Scraper.UnitTests.Service
             var expected = _testBuilder.Article_1_Title;
 
             //Act
-            var sut = _scraper.GetArticle()
+            //var sut = _scraper.GetArticle()
 
             //Assert
 
