@@ -19,19 +19,10 @@ namespace Scraper.UnitTests.Service
             }
 
             public static string ArticleListRawHtml(bool includeAbstract)
-            {
-                var assembly = Assembly.GetExecutingAssembly();
+            {   
                 string no_abstractResourceName = "Scraper.UnitTests.Service.TestData.ArticleList_WithoutAbstract_TestHtmlData.html";
                 string with_abstractResourceName = "Scraper.UnitTests.Service.TestData.ArticleList_WithAbstract_TestHtmlData.html";
-                string testData = "";
-
-                using (Stream stream = assembly.GetManifestResourceStream(includeAbstract ? with_abstractResourceName : no_abstractResourceName))
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    testData = reader.ReadToEnd();
-                }
-
-                return testData;
+                return DocReader.ReadDocument(includeAbstract ? with_abstractResourceName : no_abstractResourceName);
             }
 
             public HtmlDocument ArticleList_withAbstract_HtmlDocument()
@@ -63,8 +54,44 @@ namespace Scraper.UnitTests.Service
                             cycles, which has occurred over the past decade since its inception, has
                             bootstrapped Bitcoin into existence.";
             }
-
-
         }
+
+        public class ArticleContentTestBuilder
+        {
+            HtmlDocument doc = new HtmlDocument();
+
+            public ArticleContentTestBuilder()
+            {
+
+            }
+
+            public HtmlDocument ArticleContent_1_HtmlDocument()
+            {
+                doc.LoadHtml(DocReader.ReadDocument("Scraper.UnitTests.Service.TestData.ArtcleContent_1_TestData.html"));
+                return doc;
+            }
+
+            public  int Article_1_AuthorCount => 22;
+            public  string Article_1_Comment => "13 pages, 11 figures";
+            public  string Article_1_Title => @"[2005.06300] Long-range magnetic order in the ${\tilde S}=1/2$ triangular lattice
+  antiferromagnet KCeS$_2$";
+        }
+
+        public class DocReader
+        {
+            public static string ReadDocument(string resourceName)
+            {
+                string testData = "";
+                var assembly = Assembly.GetExecutingAssembly();
+                using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    testData = reader.ReadToEnd();
+                }
+
+                return testData;
+            }
+        }
+
     }
 }
