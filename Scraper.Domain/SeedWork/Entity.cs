@@ -55,6 +55,7 @@ namespace Scraper.Domain.SeedWork
                 return base.GetHashCode();
 
         }
+
         public static bool operator ==(Entity left, Entity right)
         {
             if (Object.Equals(left, null))

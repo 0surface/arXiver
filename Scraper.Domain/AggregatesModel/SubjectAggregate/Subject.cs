@@ -1,16 +1,15 @@
 ﻿using Scraper.Domain.SeedWork;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Scraper.Domain.AggregatesModel.SubjectAggregate
 {
     public class Subject
         : Entity, IAggregateRoot
     {
-        public string SubjectCode { get; private set; }
-        public string FullName { get; private set; }
-        public string DisciplineName { get; private set; }
-        public string DisciplineCode { get; private set; }
-        public string Field  {get; private set; }
+        public string Code { get; private set; }
+        public string Name { get; private set; }
+        public Discipline Discipline { get; private set; }
 
         private List<string> _categories;
         public IReadOnlyCollection<string> Categories => _categories;
@@ -18,16 +17,13 @@ namespace Scraper.Domain.AggregatesModel.SubjectAggregate
         protected Subject() 
         {
             _categories = new List<string>();
+            Discipline = null;
         }
 
-        public Subject(string subjectCode, string name, string disciplineName
-            , string disciplineCode, string field)
+        public Subject(string subjectCode, string name)
         {
-            SubjectCode = subjectCode;
-            FullName = name;
-            DisciplineName = disciplineName;
-            DisciplineCode = disciplineCode;
-            Field = field;
+            Code = subjectCode;
+            Name = name;
         }
 
         public void AddCategories(string catagory)
@@ -35,6 +31,18 @@ namespace Scraper.Domain.AggregatesModel.SubjectAggregate
             if(_categories.Exists(s => s.Contains(catagory) == false))
             {
                 _categories.Add(catagory);
+            }
+        }
+
+        public void AddDiscipline(string code)
+        {
+            if (!string.IsNullOrEmpty(code) && Discipline == null)
+            {
+                var matching = Enumeration.GetAll<Discipline>().Where(x => x.Code == code).FirstOrDefault();
+                if(matching != null)
+                {
+                    Discipline = matching;
+                }
             }
         }
     }
