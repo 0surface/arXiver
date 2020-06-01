@@ -28,7 +28,14 @@ namespace Scraper.Domain.AggregatesModel.SubjectAggregate
         public ScientificField Field { get; set; }
         public string Code { get; set; }
 
-        public Discipline(int id, string name, string code, ScientificField field) 
+        public Discipline(int id, string name, string code, ScientificField field)
+            : base(id, name)
+        {
+
+
+        }
+
+        public Discipline(int id, string name, string code) 
             : base(id, name)
         {
 

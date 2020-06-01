@@ -5,15 +5,15 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
     public class SubjectItem
         : Entity
     {
-        public string SubjectCode { get; private set; }
+        public string Code { get; private set; }
         public string Name { get; private set; }
-        public bool IsPrimarySubject { get; private set; }
+        public bool IsPrimary { get; private set; }
 
-        public SubjectItem(string subjectCode, string name, bool isPrimarySubject)
+        public SubjectItem(string code, string name, bool isPrimary)
         {
-            SubjectCode = subjectCode;
+            Code = code;
             Name = name;
-            IsPrimarySubject = isPrimarySubject;
+            IsPrimary = isPrimary;
         }
     }
 }
