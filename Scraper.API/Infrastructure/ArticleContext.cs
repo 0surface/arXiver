@@ -9,10 +9,12 @@ namespace Scraper.API.Infrastructure
     public class ArticleContext : DbContext
     {
         public DbSet<Article> Articles { get; set; }
-        public DbSet<Version> Versions { get; set; }
-        public DbSet<SubjectItem> SubjectItems { get; set; }        
+        public DbSet<Version> Versions { get; set; }      
         public DbSet<AuthorArticle> AuthorArticles { get; set; }
+        public DbSet<SubjectItemArticle> SubjectItemArticles { get; set; }
 
+        public DbSet<ScientificField> ScientificFields { get; set; }
+        public DbSet<Discipline> Disciplines { get; set; }
         public DbSet<Subject> Subjects { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -28,12 +30,14 @@ namespace Scraper.API.Infrastructure
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
+        {   
             /* This helps EF core understand the intended database schema, 
              * setting up a Many-To-Many relationship between Article and author */
             modelBuilder.Entity<AuthorArticle>().HasKey(s => new { s.AuthorId, s.ArticleId });
-            modelBuilder.Entity<Discipline>().ToTable("Disciplines");
-            modelBuilder.Entity<ScientificField>().ToTable("ScientificFields");
+            modelBuilder.Entity<SubjectItemArticle>().HasKey(s => new { s.SubjectItemId, s.ArticleId });
+
+            modelBuilder.Entity<Author>().ToTable("Authors");
+            modelBuilder.Entity<SubjectItem>().ToTable("SubjectItem");
         }
 
     }

@@ -12,16 +12,18 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
     {
         public string ArxivId { get; private set; }
         public string HtmlLink { get; private set; }
+        public string PdfUrl { get; set; }
+        public string OtherFormatUrl { get; set; }
         public string Title { get; private set; }
         public string AbstractText { get; private set; }
         public string Comments { get; private set; }
         public string JournalReference { get; private set; }
         public string JournalReferenceHtmlLink { get; private set; }
-
-        public List<AuthorArticle> AuthorArticles { get; private set; }
-
-        //private readonly List<Author> _authors;
-        //public IReadOnlyCollection<Author> Authors => _authors;
+        public DateTime DisplayDate { get; private set; }
+        public DateTime ScrapedDate { get; private set; }
+        
+        public List<AuthorArticle> AuthorArticles { get;  private set; }
+        public List<SubjectItemArticle> SubjectItemArticles { get; private set; }
 
         // DDD Patterns comment
         // Using a private collection field, better for DDD Aggregate's encapsulation
@@ -30,39 +32,37 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
         private readonly List<Version> _versions;
         public IReadOnlyCollection<Version> Versions => _versions;
 
-        private List<SubjectItem> _subjectItems;
-        public IReadOnlyCollection<SubjectItem> SubjectItems => _subjectItems;
-                
-
         protected Article()
         {
             AuthorArticles = new List<AuthorArticle>();
+            SubjectItemArticles = new List<SubjectItemArticle>();
             _versions = new List<Version>();
-            _subjectItems = new List<SubjectItem>();
         }
 
-        public Article(string arxivId, string htmlLink, string title, string abstractText, string comments, string subjects,
-            string journalReference, string journalReferenceHtmlLink)
+        public Article(string arxivId, string htmlLink, string pdfUrl, string otherFormatUrl, 
+            string title, string abstractText, string comments
+            ,string journalReference, string journalReferenceHtmlLink, DateTime scrapedDate)
         {
             ArxivId = arxivId;
             HtmlLink = htmlLink;
+            PdfUrl = pdfUrl;
+            OtherFormatUrl = otherFormatUrl;
             Title = title;
             AbstractText = abstractText;
             Comments = comments;
             JournalReference = journalReference;
             JournalReferenceHtmlLink = journalReferenceHtmlLink;
+            ScrapedDate = scrapedDate;
         }
 
-        //public void AddAuthor(string fullName, string authorId)
-        //{
-        //    var existingAuthorForPaper = _authors.Where(a => a.AuthorId == authorId).SingleOrDefault();
-
-        //    if(existingAuthorForPaper == null)
-        //    {
-        //        var author = new Author(fullName, authorId);
-        //        _authors.Add(author);
-        //    }
-        //}
+        public void AddAuthor(string name, string code)
+        {
+            if (AuthorArticles.Exists(a => a.Author.Code == code) == false)
+            {
+                var author = new Author(name, code);
+                AuthorArticles.Add(new AuthorArticle() { Author = author, Article = this });
+            }
+        }
 
         public void AddVersion(string arxivId, string htmlLink, DateTime submissionDate, string tag
             , string citationSubjectCode, int sizeInKiloBytes)
@@ -85,14 +85,40 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
             }
         }
 
-        public void AddSubject(string subjectCode, string name, bool isPrimary)
+        public void AddPrimarySubject(string code, string name)
         {
-            var existingSubjectForPaper = _subjectItems.Where(s => s.Code == subjectCode).SingleOrDefault();
+            AddSubjectItem( code, name, true);
+        }
 
-            if(existingSubjectForPaper == null)
+        public void AddSubjectItem(string code, string name, bool isPrimary = false)
+        {
+            if(SubjectItemArticles.Exists(sa => sa.SubjectItem.Code == code) == false)
             {
-                _subjectItems.Add(new SubjectItem(subjectCode, name, isPrimary));
+                var item = new SubjectItemArticle()
+                {
+                    Article = this,
+                    SubjectItem = new SubjectItem(code, name, isPrimary)
+                };
+
+                SubjectItemArticles.Add(item);
             }
+        }
+
+        //public void AddSubject(string subjectCode, string name, bool isPrimary)
+        //{
+        //    var existingSubjectForPaper = _subjectItems.Where(s => s.Code == subjectCode).SingleOrDefault();
+
+        //    if(existingSubjectForPaper == null)
+        //    {
+        //        _subjectItems.Add(new SubjectItem(subjectCode, name, isPrimary));
+        //    }
+        //}
+
+        public void AddDisplayDate(string displayDate)
+        {
+            //TODO : Refined text processing, validation
+            DisplayDate = DateTime.TryParse(displayDate, out DateTime date)
+                ? date: DateTime.MinValue;
         }
     }
 }

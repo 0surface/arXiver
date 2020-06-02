@@ -35,6 +35,9 @@ namespace Scraper.API.Migrations
                     b.Property<string>("Comments")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("DisplayDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("HtmlLink")
                         .HasColumnType("nvarchar(max)");
 
@@ -43,6 +46,15 @@ namespace Scraper.API.Migrations
 
                     b.Property<string>("JournalReferenceHtmlLink")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OtherFormatUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PdfUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ScrapedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
@@ -67,7 +79,7 @@ namespace Scraper.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Author");
+                    b.ToTable("Authors");
                 });
 
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.AuthorArticle", b =>
@@ -95,9 +107,6 @@ namespace Scraper.API.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("ArticleId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Code")
                         .HasColumnType("nvarchar(max)");
 
@@ -109,9 +118,25 @@ namespace Scraper.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.ToTable("SubjectItem");
+                });
+
+            modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItemArticle", b =>
+                {
+                    b.Property<int>("SubjectItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ArticleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.HasKey("SubjectItemId", "ArticleId");
+
                     b.HasIndex("ArticleId");
 
-                    b.ToTable("SubjectItems");
+                    b.ToTable("SubjectItemArticles");
                 });
 
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.Version", b =>
@@ -225,11 +250,19 @@ namespace Scraper.API.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItem", b =>
+            modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItemArticle", b =>
                 {
-                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.Article", null)
-                        .WithMany("SubjectItems")
-                        .HasForeignKey("ArticleId");
+                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.Article", "Article")
+                        .WithMany("SubjectItemArticles")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItem", "SubjectItem")
+                        .WithMany("SubjectItemArticles")
+                        .HasForeignKey("SubjectItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.Version", b =>

@@ -10,7 +10,7 @@ using Scraper.API.Infrastructure;
 namespace Scraper.API.Migrations
 {
     [DbContext(typeof(ArticleContext))]
-    [Migration("20200601095202_initial")]
+    [Migration("20200602133241_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,6 +37,9 @@ namespace Scraper.API.Migrations
                     b.Property<string>("Comments")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("DisplayDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("HtmlLink")
                         .HasColumnType("nvarchar(max)");
 
@@ -46,15 +49,19 @@ namespace Scraper.API.Migrations
                     b.Property<string>("JournalReferenceHtmlLink")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PrimarySubjectId")
-                        .HasColumnType("int");
+                    b.Property<string>("OtherFormatUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PdfUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ScrapedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PrimarySubjectId");
 
                     b.ToTable("Articles");
                 });
@@ -95,6 +102,45 @@ namespace Scraper.API.Migrations
                     b.ToTable("AuthorArticles");
                 });
 
+            modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Code")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SubjectItem");
+                });
+
+            modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItemArticle", b =>
+                {
+                    b.Property<int>("SubjectItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ArticleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.HasKey("SubjectItemId", "ArticleId");
+
+                    b.HasIndex("ArticleId");
+
+                    b.ToTable("SubjectItemArticles");
+                });
+
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.Version", b =>
                 {
                     b.Property<int>("Id")
@@ -127,7 +173,7 @@ namespace Scraper.API.Migrations
 
                     b.HasIndex("ArticleId");
 
-                    b.ToTable("Version");
+                    b.ToTable("Versions");
                 });
 
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.SubjectAggregate.Discipline", b =>
@@ -150,7 +196,7 @@ namespace Scraper.API.Migrations
 
                     b.HasIndex("FieldId");
 
-                    b.ToTable("Discipline");
+                    b.ToTable("Disciplines");
                 });
 
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.SubjectAggregate.ScientificField", b =>
@@ -165,7 +211,7 @@ namespace Scraper.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ScientificField");
+                    b.ToTable("ScientificFields");
                 });
 
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.SubjectAggregate.Subject", b =>
@@ -174,9 +220,6 @@ namespace Scraper.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int?>("ArticleId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Code")
                         .HasColumnType("nvarchar(max)");
@@ -189,31 +232,37 @@ namespace Scraper.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ArticleId");
-
                     b.HasIndex("DisciplineId");
 
                     b.ToTable("Subjects");
                 });
 
-            modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.Article", b =>
-                {
-                    b.HasOne("Scraper.Domain.AggregatesModel.SubjectAggregate.Subject", "PrimarySubject")
-                        .WithMany()
-                        .HasForeignKey("PrimarySubjectId");
-                });
-
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.AuthorArticle", b =>
                 {
-                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.Article", null)
+                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.Article", "Article")
                         .WithMany("AuthorArticles")
                         .HasForeignKey("ArticleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.Author", null)
+                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.Author", "Author")
                         .WithMany("AuthorArticles")
                         .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItemArticle", b =>
+                {
+                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.Article", "Article")
+                        .WithMany("SubjectItemArticles")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItem", "SubjectItem")
+                        .WithMany("SubjectItemArticles")
+                        .HasForeignKey("SubjectItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -234,10 +283,6 @@ namespace Scraper.API.Migrations
 
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.SubjectAggregate.Subject", b =>
                 {
-                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.Article", null)
-                        .WithMany("SubjectItems")
-                        .HasForeignKey("ArticleId");
-
                     b.HasOne("Scraper.Domain.AggregatesModel.SubjectAggregate.Discipline", "Discipline")
                         .WithMany()
                         .HasForeignKey("DisciplineId");
