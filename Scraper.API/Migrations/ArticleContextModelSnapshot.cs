@@ -174,44 +174,6 @@ namespace Scraper.API.Migrations
                     b.ToTable("Versions");
                 });
 
-            modelBuilder.Entity("Scraper.Domain.AggregatesModel.SubjectAggregate.Discipline", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("FieldId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FieldId");
-
-                    b.ToTable("Disciplines");
-                });
-
-            modelBuilder.Entity("Scraper.Domain.AggregatesModel.SubjectAggregate.ScientificField", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ScientificFields");
-                });
-
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.SubjectAggregate.Subject", b =>
                 {
                     b.Property<int>("Id")
@@ -222,15 +184,19 @@ namespace Scraper.API.Migrations
                     b.Property<string>("Code")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("DisciplineId")
-                        .HasColumnType("int");
+                    b.Property<string>("Discipline")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GroupCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GroupName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DisciplineId");
 
                     b.ToTable("Subjects");
                 });
@@ -270,20 +236,6 @@ namespace Scraper.API.Migrations
                     b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.Article", null)
                         .WithMany("Versions")
                         .HasForeignKey("ArticleId");
-                });
-
-            modelBuilder.Entity("Scraper.Domain.AggregatesModel.SubjectAggregate.Discipline", b =>
-                {
-                    b.HasOne("Scraper.Domain.AggregatesModel.SubjectAggregate.ScientificField", "Field")
-                        .WithMany()
-                        .HasForeignKey("FieldId");
-                });
-
-            modelBuilder.Entity("Scraper.Domain.AggregatesModel.SubjectAggregate.Subject", b =>
-                {
-                    b.HasOne("Scraper.Domain.AggregatesModel.SubjectAggregate.Discipline", "Discipline")
-                        .WithMany()
-                        .HasForeignKey("DisciplineId");
                 });
 #pragma warning restore 612, 618
         }

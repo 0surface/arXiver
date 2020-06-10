@@ -45,19 +45,6 @@ namespace Scraper.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ScientificFields",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ScientificFields", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "SubjectItem",
                 columns: table => new
                 {
@@ -70,6 +57,23 @@ namespace Scraper.API.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SubjectItem", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Subjects",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Code = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: true),
+                    GroupCode = table.Column<string>(nullable: true),
+                    GroupName = table.Column<string>(nullable: true),
+                    Discipline = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Subjects", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -123,27 +127,6 @@ namespace Scraper.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Disciplines",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(nullable: true),
-                    FieldId = table.Column<int>(nullable: true),
-                    Code = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Disciplines", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Disciplines_ScientificFields_FieldId",
-                        column: x => x.FieldId,
-                        principalTable: "ScientificFields",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "SubjectItemArticles",
                 columns: table => new
                 {
@@ -168,46 +151,15 @@ namespace Scraper.API.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "Subjects",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Code = table.Column<string>(nullable: true),
-                    Name = table.Column<string>(nullable: true),
-                    DisciplineId = table.Column<int>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Subjects", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Subjects_Disciplines_DisciplineId",
-                        column: x => x.DisciplineId,
-                        principalTable: "Disciplines",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_AuthorArticles_ArticleId",
                 table: "AuthorArticles",
                 column: "ArticleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Disciplines_FieldId",
-                table: "Disciplines",
-                column: "FieldId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_SubjectItemArticles_ArticleId",
                 table: "SubjectItemArticles",
                 column: "ArticleId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Subjects_DisciplineId",
-                table: "Subjects",
-                column: "DisciplineId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Versions_ArticleId",
@@ -236,13 +188,7 @@ namespace Scraper.API.Migrations
                 name: "SubjectItem");
 
             migrationBuilder.DropTable(
-                name: "Disciplines");
-
-            migrationBuilder.DropTable(
                 name: "Articles");
-
-            migrationBuilder.DropTable(
-                name: "ScientificFields");
         }
     }
 }
