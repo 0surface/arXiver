@@ -4,7 +4,7 @@ namespace Scraper.Types.Service
 {
     public class ArticleItemDto
     {
-        public string DisplayDate { get; set; }
+        public string H3HeaderText { get; set; }
         public string ArxivId { get; set; }
         public string AbstractUrl { get; set; }
         public string PdfUrl { get; set; }

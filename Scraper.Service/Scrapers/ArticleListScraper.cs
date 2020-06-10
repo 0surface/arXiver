@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using Scraper.Domain.AggregatesModel.ArticleAggregate;
 using Scraper.Service.Util;
 using Scraper.Types.Service;
 using System;
@@ -16,7 +17,7 @@ namespace Scraper.Service.Scrapers
 
 		List<ArticleItemDto> GetArticleList(HtmlDocument htmlDocument, bool includeAbstract);
 
-		Task<List<ArticleItemDto>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
+		Task<List<Article>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
 	}
 
 	public class ArticleListScraper : IArticleListScraper
@@ -103,12 +104,74 @@ namespace Scraper.Service.Scrapers
 			return result;
 		}
 
-		public async Task<List<ArticleItemDto>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken)
+		public async Task<List<Article>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken)
 		{			
 			HtmlDocument doc = await HtmlAgilityHelper.GetHtmlDocument(url, cancellationToken);
 
-			return (doc != null) ? GetArticleList(doc, includeAbstract)
-						: new List<ArticleItemDto>();
+			return (doc != null) ? 
+				MaptoDomain( GetArticleList(doc, includeAbstract))
+				: new List<Article>();
+		}
+
+
+		private List<Article> MaptoDomain(List<ArticleItemDto> dtoList)
+		{
+			List<Article> articles = new List<Article>();
+
+			if (dtoList == null || dtoList.Count < 1)return articles;
+
+			DateTime scrapedDate = DateTime.Now;
+
+			foreach (var item in dtoList)
+			{
+				try
+				{
+					Article article = new Article(item.ArxivId,
+						item.AbstractUrl,
+						item.PdfUrl,
+						item.OtherFormatUrl,
+						item.Title,
+						item.AbstractText,
+						item.Comments,
+						string.Empty,
+						string.Empty,
+						scrapedDate);
+
+					if (item.Authors != null && item.Authors.Count > 0)
+					{
+						foreach (var author in item.Authors)
+						{	
+							article.AddAuthor(author.FullName
+								, author.ContextUrl?.RegexFindInBetweenStrings("+", "/"));
+						}
+					}
+
+					if (item.PrimarySubject != null && item.PrimarySubject.Length == 2)
+					{
+						article.AddPrimarySubject(item.PrimarySubject[1], item.PrimarySubject[0]);
+					}
+
+					if (item.Subjects != null && item.Subjects.Count > 0)
+					{
+						foreach (var subject in item.Subjects)
+						{
+							article.AddSubjectItem(subject.Code, subject.Description);
+						}
+					}
+
+					article.AddDisplayDate(GetDisplayDateString(item.H3HeaderText));
+
+					article.AddScrapeContext(item.H3HeaderText);
+
+					articles.Add(article);
+				}
+				catch (Exception ex)
+				{
+					var c = ex.Message;
+				}
+			}
+
+			return articles;
 		}
 
 		#region Private
@@ -134,7 +197,7 @@ namespace Scraper.Service.Scrapers
 
 				ArticleItemDto dto = new ArticleItemDto();
 
-				dto.DisplayDate = item.pub_date;
+				dto.H3HeaderText = item.pub_date;
 				dto.ArxivId = _GetDtElementInnerText(item.dtdesc, "Abstract");
 				dto.AbstractUrl = _GetDtElementAttributeValue(item.dtdesc, "Abstract");
 				dto.PdfUrl = _GetDtElementAttributeValue(item.dtdesc, "Download PDF");
@@ -400,6 +463,16 @@ namespace Scraper.Service.Scrapers
 			}
 
 			return authors;
+		}
+
+		private string GetDisplayDateString(string h3Text)
+        {
+			if (string.IsNullOrEmpty(h3Text))
+				return string.Empty;
+
+			string[] arr = h3Text.Split("for".ToCharArray(), StringSplitOptions.None);
+
+			return arr.Length > 1 ? arr[1].Trim() : string.Empty;
 		}
 
 		#endregion Private

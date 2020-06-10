@@ -21,8 +21,8 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
         public string JournalReferenceHtmlLink { get; private set; }
         public DateTime DisplayDate { get; private set; }
         public DateTime ScrapedDate { get; private set; }
-        
-        public List<AuthorArticle> AuthorArticles { get;  private set; }
+
+        public List<AuthorArticle> AuthorArticles { get; private set; }
         public List<SubjectItemArticle> SubjectItemArticles { get; private set; }
 
         // DDD Patterns comment
@@ -32,14 +32,19 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
         private readonly List<Version> _versions;
         public IReadOnlyCollection<Version> Versions => _versions;
 
+        public ArticleScrapeContextEnum ScrapeContext { get; private set; }
+
         protected Article()
         {
+            AuthorArticles = new List<AuthorArticle>();
+            SubjectItemArticles = new List<SubjectItemArticle>();
             _versions = new List<Version>();
+            ScrapeContext = ArticleScrapeContextEnum.None;
         }
-               
-        public Article(string arxivId, string htmlLink, string pdfUrl, string otherFormatUrl, 
+
+        public Article(string arxivId, string htmlLink, string pdfUrl, string otherFormatUrl,
             string title, string abstractText, string comments
-            ,string journalReference, string journalReferenceHtmlLink, DateTime scrapedDate)
+            , string journalReference, string journalReferenceHtmlLink, DateTime scrapedDate)
         {
             ArxivId = arxivId;
             HtmlLink = htmlLink;
@@ -51,6 +56,11 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
             JournalReference = journalReference;
             JournalReferenceHtmlLink = journalReferenceHtmlLink;
             ScrapedDate = scrapedDate;
+
+            AuthorArticles = new List<AuthorArticle>();
+            SubjectItemArticles = new List<SubjectItemArticle>();
+            _versions = new List<Version>();
+            ScrapeContext = ArticleScrapeContextEnum.None;
         }
 
         public void AddAuthor(string name, string code)
@@ -85,12 +95,12 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
 
         public void AddPrimarySubject(string code, string name)
         {
-            AddSubjectItem( code, name, true);
+            AddSubjectItem(code, name, true);
         }
 
         public void AddSubjectItem(string code, string name, bool isPrimary = false)
         {
-            if(SubjectItemArticles.Exists(sa => sa.SubjectItem.Code == code) == false)
+            if (SubjectItemArticles.Exists(sa => sa.SubjectItem.Code == code) == false)
             {
                 var item = new SubjectItemArticle()
                 {
@@ -112,11 +122,24 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
         //    }
         //}
 
-        public void AddDisplayDate(string displayDate)
+        public void AddDisplayDate(string input)
         {
-            //TODO : Refined text processing, validation
-            DisplayDate = DateTime.TryParse(displayDate, out DateTime date)
-                ? date: DateTime.MinValue;
+            DisplayDate = DateTime.TryParse(input, out DateTime date)
+                ? date
+                : DateTime.MinValue;
+        }
+
+        public void AddScrapeContext(string input)
+        {
+            if (!string.IsNullOrEmpty(input))
+            {
+                if (input.ToLower().Contains("submission"))
+                    ScrapeContext = ArticleScrapeContextEnum.Submission;
+                else if (input.ToLower().Contains("cross-lists") || input.ToLower().Contains("cross"))
+                    ScrapeContext = ArticleScrapeContextEnum.Submission;
+                else if (input.ToLower().Contains("Replacement"))
+                    ScrapeContext = ArticleScrapeContextEnum.Submission;
+            }
         }
     }
 }
