@@ -34,11 +34,9 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
 
         protected Article()
         {
-            AuthorArticles = new List<AuthorArticle>();
-            SubjectItemArticles = new List<SubjectItemArticle>();
             _versions = new List<Version>();
         }
-
+               
         public Article(string arxivId, string htmlLink, string pdfUrl, string otherFormatUrl, 
             string title, string abstractText, string comments
             ,string journalReference, string journalReferenceHtmlLink, DateTime scrapedDate)
