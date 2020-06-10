@@ -1,8 +1,6 @@
-﻿using Scraper.Domain.SeedWork;
-
-namespace Scraper.Domain.AggregatesModel.ArticleAggregate
+﻿namespace Scraper.Domain.AggregatesModel.ArticleAggregate
 {
-    public class AuthorArticle : Entity
+    public class AuthorArticle
     {
         public int AuthorId { get; set; }
         public Author Author { get; set; }

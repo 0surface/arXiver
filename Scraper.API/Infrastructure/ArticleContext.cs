@@ -13,6 +13,7 @@ namespace Scraper.API.Infrastructure
          DbSet<AuthorArticle> AuthorArticles { get; set; }
          DbSet<SubjectItemArticle> SubjectItemArticles { get; set; }
          DbSet<Subject> Subjects { get; set; }
+         DbSet<SubjectItem> SubjectItems { get; set; }
 
         int SaveChanges();
     }
@@ -24,6 +25,7 @@ namespace Scraper.API.Infrastructure
         public DbSet<AuthorArticle> AuthorArticles { get; set; }
         public DbSet<SubjectItemArticle> SubjectItemArticles { get; set; }
         public DbSet<Subject> Subjects { get; set; }
+        public DbSet<SubjectItem> SubjectItems { get; set; }
 
         private IConfiguration Configuration { get; set; }
 
@@ -56,11 +58,12 @@ namespace Scraper.API.Infrastructure
             /* This helps EF core understand the intended database schema, 
              * setting up a Many-To-Many relationship between Article and author */
             modelBuilder.Entity<AuthorArticle>().HasKey(s => new { s.AuthorId, s.ArticleId });
-            modelBuilder.Entity<SubjectItemArticle>().HasKey(s => new { s.SubjectItemId, s.ArticleId });
+            modelBuilder.Entity<SubjectItemArticle>().HasKey(s => new { s.ArticleId });
 
             modelBuilder.Entity<Author>().ToTable("Authors");
-            modelBuilder.Entity<SubjectItem>().ToTable("SubjectItem");
+            modelBuilder.Entity<SubjectItem>().ToTable("SubjectItems");
         }
     }
 }
+
 

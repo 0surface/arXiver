@@ -10,8 +10,8 @@ using Scraper.API.Infrastructure;
 namespace Scraper.API.Migrations
 {
     [DbContext(typeof(ArticleContext))]
-    [Migration("20200610155356_update_0.1")]
-    partial class update_01
+    [Migration("20200610215532_initial")]
+    partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -95,9 +95,6 @@ namespace Scraper.API.Migrations
                     b.Property<int>("ArticleId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
                     b.HasKey("AuthorId", "ArticleId");
 
                     b.HasIndex("ArticleId");
@@ -123,23 +120,25 @@ namespace Scraper.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SubjectItem");
+                    b.ToTable("SubjectItems");
                 });
 
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItemArticle", b =>
                 {
+                    b.Property<int>("ArticleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("ArticleId1")
+                        .HasColumnType("int");
+
                     b.Property<int>("SubjectItemId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ArticleId")
-                        .HasColumnType("int");
+                    b.HasKey("ArticleId");
 
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.HasKey("SubjectItemId", "ArticleId");
-
-                    b.HasIndex("ArticleId");
+                    b.HasIndex("ArticleId1");
 
                     b.ToTable("SubjectItemArticles");
                 });
@@ -225,13 +224,7 @@ namespace Scraper.API.Migrations
                 {
                     b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.Article", "Article")
                         .WithMany("SubjectItemArticles")
-                        .HasForeignKey("ArticleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItem", "SubjectItem")
-                        .WithMany("SubjectItemArticles")
-                        .HasForeignKey("SubjectItemId")
+                        .HasForeignKey("ArticleId1")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

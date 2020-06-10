@@ -6,7 +6,7 @@
 
         Submission = 1,
 
-        CrossList = 1,
+        CrossList = 2,
 
         Replacement = 3,
     }

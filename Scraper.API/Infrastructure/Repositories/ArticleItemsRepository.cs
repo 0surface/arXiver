@@ -1,4 +1,5 @@
 ﻿using Scraper.Domain.AggregatesModel.ArticleAggregate;
+using System;
 using System.Collections.Generic;
 
 namespace Scraper.API.Infrastructure.Repositories
@@ -27,12 +28,14 @@ namespace Scraper.API.Infrastructure.Repositories
             try
             {
                 _context.Articles.AddRange(articles);
-                return _context.SaveChanges();
+
+                return articles.Count > 0 ? _context.SaveChanges() : 0;
             }
-            catch (System.Exception)
+            catch (Exception ex)
             {
+                var c = ex.Message;
                 return 0;
-            }           
+            }
         }
 
     }

@@ -13,7 +13,7 @@ namespace Scraper.Types.Service
         public string Comments { get; set; }
         public string AbstractText { get; set; }
         public string[] PrimarySubject { get; set; }
-        public List<SubjectItemDto> Subjects { get; set; } = new List<SubjectItemDto>();
+        public List<SubjectItemDto> SubjectItems { get; set; } = new List<SubjectItemDto>();
         public List<AuthorDto> Authors { get; set; } = new List<AuthorDto>();
     }
 

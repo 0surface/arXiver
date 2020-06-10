@@ -100,17 +100,27 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
 
         public void AddSubjectItem(string code, string name, bool isPrimary = false)
         {
-            if (SubjectItemArticles.Exists(sa => sa.SubjectItem.Code == code) == false)
-            {
+            //if (SubjectItemArticles.Exists(sa => sa.SubjectItem.Code == code) == false)
+            //{
                 var item = new SubjectItemArticle()
                 {
                     Article = this,
-                    SubjectItem = new SubjectItem(code, name, isPrimary)
+                    // SubjectItem = new SubjectItem(code, name, isPrimary)
                 };
 
                 SubjectItemArticles.Add(item);
-            }
+            //}
         }
+
+        public void AddExistingSubjectItem(SubjectItem subjectItem)
+        {
+            SubjectItemArticles.Add(new SubjectItemArticle()
+            {
+                Article = this,
+                SubjectItemId =subjectItem.Id
+                //SubjectItem = subjectItem
+            });
+        }       
 
         //public void AddSubject(string subjectCode, string name, bool isPrimary)
         //{
@@ -136,9 +146,9 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
                 if (input.ToLower().Contains("submission"))
                     ScrapeContext = ArticleScrapeContextEnum.Submission;
                 else if (input.ToLower().Contains("cross-lists") || input.ToLower().Contains("cross"))
-                    ScrapeContext = ArticleScrapeContextEnum.Submission;
+                    ScrapeContext = ArticleScrapeContextEnum.CrossList;
                 else if (input.ToLower().Contains("Replacement"))
-                    ScrapeContext = ArticleScrapeContextEnum.Submission;
+                    ScrapeContext = ArticleScrapeContextEnum.Replacement;
             }
         }
     }

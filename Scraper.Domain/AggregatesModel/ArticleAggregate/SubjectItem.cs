@@ -9,11 +9,11 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
         public string Code { get; private set; }
         public string Name { get; private set; }
         public bool IsPrimary { get; private set; }
-        public List<SubjectItemArticle> SubjectItemArticles { get; set; }
+        //public List<SubjectItemArticle> SubjectItemArticles { get; set; }
         
         protected SubjectItem()
         {
-            SubjectItemArticles = new List<SubjectItemArticle>();
+            //SubjectItemArticles = new List<SubjectItemArticle>();
         }
 
         public SubjectItem(string code, string name, bool isPrimary)

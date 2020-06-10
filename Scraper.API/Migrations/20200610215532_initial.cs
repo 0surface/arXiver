@@ -23,7 +23,8 @@ namespace Scraper.API.Migrations
                     JournalReference = table.Column<string>(nullable: true),
                     JournalReferenceHtmlLink = table.Column<string>(nullable: true),
                     DisplayDate = table.Column<DateTime>(nullable: false),
-                    ScrapedDate = table.Column<DateTime>(nullable: false)
+                    ScrapedDate = table.Column<DateTime>(nullable: false),
+                    ScrapeContext = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -45,7 +46,7 @@ namespace Scraper.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SubjectItem",
+                name: "SubjectItems",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -56,7 +57,7 @@ namespace Scraper.API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SubjectItem", x => x.Id);
+                    table.PrimaryKey("PK_SubjectItems", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -74,6 +75,26 @@ namespace Scraper.API.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Subjects", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SubjectItemArticles",
+                columns: table => new
+                {
+                    ArticleId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ArticleId1 = table.Column<int>(nullable: false),
+                    SubjectItemId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubjectItemArticles", x => x.ArticleId);
+                    table.ForeignKey(
+                        name: "FK_SubjectItemArticles_Articles_ArticleId1",
+                        column: x => x.ArticleId1,
+                        principalTable: "Articles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -106,8 +127,7 @@ namespace Scraper.API.Migrations
                 columns: table => new
                 {
                     AuthorId = table.Column<int>(nullable: false),
-                    ArticleId = table.Column<int>(nullable: false),
-                    Id = table.Column<int>(nullable: false)
+                    ArticleId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -126,40 +146,15 @@ namespace Scraper.API.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "SubjectItemArticles",
-                columns: table => new
-                {
-                    SubjectItemId = table.Column<int>(nullable: false),
-                    ArticleId = table.Column<int>(nullable: false),
-                    Id = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SubjectItemArticles", x => new { x.SubjectItemId, x.ArticleId });
-                    table.ForeignKey(
-                        name: "FK_SubjectItemArticles_Articles_ArticleId",
-                        column: x => x.ArticleId,
-                        principalTable: "Articles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_SubjectItemArticles_SubjectItem_SubjectItemId",
-                        column: x => x.SubjectItemId,
-                        principalTable: "SubjectItem",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_AuthorArticles_ArticleId",
                 table: "AuthorArticles",
                 column: "ArticleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SubjectItemArticles_ArticleId",
+                name: "IX_SubjectItemArticles_ArticleId1",
                 table: "SubjectItemArticles",
-                column: "ArticleId");
+                column: "ArticleId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Versions_ArticleId",
@@ -176,6 +171,9 @@ namespace Scraper.API.Migrations
                 name: "SubjectItemArticles");
 
             migrationBuilder.DropTable(
+                name: "SubjectItems");
+
+            migrationBuilder.DropTable(
                 name: "Subjects");
 
             migrationBuilder.DropTable(
@@ -183,9 +181,6 @@ namespace Scraper.API.Migrations
 
             migrationBuilder.DropTable(
                 name: "Authors");
-
-            migrationBuilder.DropTable(
-                name: "SubjectItem");
 
             migrationBuilder.DropTable(
                 name: "Articles");

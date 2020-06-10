@@ -54,9 +54,40 @@ namespace Scraper.API.Infrastructure
                             : GetPredefinedArticles());
                     }
 
+                    if (!context.SubjectItems.Any())
+                    {
+                        context.SubjectItems.AddRange(useCustomizationData
+                            ? GetPredefinedSubjectItems()
+                            :GetSubjectItemsFromFile(contentRootPath, logger));
+                    }
+
                     await context.SaveChangesAsync();
                 }
             });
+        }
+
+        #region Article Aggregate
+        
+        private IEnumerable<SubjectItem> GetPredefinedSubjectItems()
+        {
+            return new List<SubjectItem>()
+           {
+               new SubjectItem ("astro-ph.GA", "Astrophysics of Galaxies", true),
+               new SubjectItem ("astro-ph.GA", "Astrophysics of Galaxies", false)
+           };
+        }
+
+        private IEnumerable<SubjectItem> GetSubjectItemsFromFile(string contentRootPath, ILogger<ArticleContextSeed> logger)
+        {
+            List<SubjectItem> subjectItems = new List<SubjectItem>();
+
+            foreach (var subject in GetSubjectsFromFile(contentRootPath, logger))
+            {
+                subjectItems.Add(new SubjectItem(subject.Code, subject.Name, true));
+                subjectItems.Add(new SubjectItem(subject.Code, subject.Name, false));
+            }
+
+            return subjectItems;
         }
 
         private IEnumerable<Article> GetPredefinedArticles()
@@ -76,8 +107,10 @@ namespace Scraper.API.Infrastructure
             return new List<Article>();
         }
 
-        #region Subjects
-        
+        #endregion Article Aggregate
+
+        #region Subjects Aggregate
+
         private IEnumerable<Subject> GetSubjectsFromFile(string contentRootPath, ILogger<ArticleContextSeed> log)
         {
             string csvSubjects = Path.Combine(contentRootPath, "Setup", "Subjects.csv");
@@ -101,7 +134,7 @@ namespace Scraper.API.Infrastructure
             }
 
             var splitText = value.Split(',');
-            if (splitText .Length != 5)
+            if (splitText.Length != 5)
             {
                 throw new Exception("Subject is Invalid or empty");
             }
@@ -113,13 +146,13 @@ namespace Scraper.API.Infrastructure
 
         private IEnumerable<Subject> GetPredefinedSubjects()
         {
-            return new List<Subject>() 
+            return new List<Subject>()
             {
                 new Subject("astro-ph.GA", "Astrophysics of Galaxies", "Astrophysics", "astro-ph", "Physics")
-            };            
+            };
         }
 
-        #endregion
+        #endregion Subjects Aggregate
 
         private AsyncRetryPolicy CreatePolicy(ILogger<ArticleContextSeed> logger, string prefix, int retries = 3)
         {
@@ -135,3 +168,4 @@ namespace Scraper.API.Infrastructure
         }
     }
 }
+

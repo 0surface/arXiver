@@ -32,9 +32,5 @@
     <ProjectReference Include="..\WebHost.Customization\WebHost.Customization.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Infrastructure\DBDiagrams\" />
-  </ItemGroup>
-
 
 </Project>

@@ -17,9 +17,9 @@ namespace Scraper.Service.Scrapers
 
 		List<ArticleItemDto> GetArticleList(HtmlDocument htmlDocument, bool includeAbstract);
 
-		Task<List<Article>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
+		Task<List<ArticleItemDto>> GetArticles(string url, bool includeAbstract, bool submissionOnly, CancellationToken cancellationToken);
 	}
-
+	
 	public class ArticleListScraper : IArticleListScraper
 	{
 		public ArticleListScraper()
@@ -104,74 +104,18 @@ namespace Scraper.Service.Scrapers
 			return result;
 		}
 
-		public async Task<List<Article>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken)
+		public async Task<List<ArticleItemDto>> GetArticles(string url, bool includeAbstract, bool submissionOnly, CancellationToken cancellationToken)
 		{			
 			HtmlDocument doc = await HtmlAgilityHelper.GetHtmlDocument(url, cancellationToken);
 
-			return (doc != null) ? 
-				MaptoDomain( GetArticleList(doc, includeAbstract))
-				: new List<Article>();
-		}
+			if (doc == null)
+				return new List<ArticleItemDto>();
 
+			var articles =  GetArticleList(doc, includeAbstract);
 
-		private List<Article> MaptoDomain(List<ArticleItemDto> dtoList)
-		{
-			List<Article> articles = new List<Article>();
-
-			if (dtoList == null || dtoList.Count < 1)return articles;
-
-			DateTime scrapedDate = DateTime.Now;
-
-			foreach (var item in dtoList)
-			{
-				try
-				{
-					Article article = new Article(item.ArxivId,
-						item.AbstractUrl,
-						item.PdfUrl,
-						item.OtherFormatUrl,
-						item.Title,
-						item.AbstractText,
-						item.Comments,
-						string.Empty,
-						string.Empty,
-						scrapedDate);
-
-					if (item.Authors != null && item.Authors.Count > 0)
-					{
-						foreach (var author in item.Authors)
-						{	
-							article.AddAuthor(author.FullName
-								, author.ContextUrl?.RegexFindInBetweenStrings("+", "/"));
-						}
-					}
-
-					if (item.PrimarySubject != null && item.PrimarySubject.Length == 2)
-					{
-						article.AddPrimarySubject(item.PrimarySubject[1], item.PrimarySubject[0]);
-					}
-
-					if (item.Subjects != null && item.Subjects.Count > 0)
-					{
-						foreach (var subject in item.Subjects)
-						{
-							article.AddSubjectItem(subject.Code, subject.Description);
-						}
-					}
-
-					article.AddDisplayDate(GetDisplayDateString(item.H3HeaderText));
-
-					article.AddScrapeContext(item.H3HeaderText);
-
-					articles.Add(article);
-				}
-				catch (Exception ex)
-				{
-					var c = ex.Message;
-				}
-			}
-
-			return articles;
+			return articles != null && articles.Count > 0
+				? articles
+				: new List<ArticleItemDto>();
 		}
 
 		#region Private
@@ -198,18 +142,18 @@ namespace Scraper.Service.Scrapers
 				ArticleItemDto dto = new ArticleItemDto();
 
 				dto.H3HeaderText = item.pub_date;
-				dto.ArxivId = _GetDtElementInnerText(item.dtdesc, "Abstract");
-				dto.AbstractUrl = _GetDtElementAttributeValue(item.dtdesc, "Abstract");
-				dto.PdfUrl = _GetDtElementAttributeValue(item.dtdesc, "Download PDF");
-				dto.OtherFormatUrl = _GetDtElementAttributeValue(item.dtdesc, "Other formats");
+				dto.ArxivId = GetDtElementInnerText(item.dtdesc, "Abstract");
+				dto.AbstractUrl = GetDtElementAttributeValue(item.dtdesc, "Abstract");
+				dto.PdfUrl = GetDtElementAttributeValue(item.dtdesc, "Download PDF");
+				dto.OtherFormatUrl = GetDtElementAttributeValue(item.dtdesc, "Other formats");
 
-				dto.Title = _GetDDElementTitle(item.dddesc, "div", "class", "list-title mathjax", "Title:");
-				dto.Comments = _GetDDElementComment(item.dddesc, "list-comments mathjax");
-				dto.AbstractText = includeAbstract ? _GetDDElementAbstract(item.dddesc, "mathjax") : string.Empty;
-				dto.PrimarySubject = _GetDDElementPrimarySubject(item.dddesc, "div", "class", "list-subjects", ")");
+				dto.Title = GetDDElementTitle(item.dddesc, "div", "class", "list-title mathjax", "Title:");
+				dto.Comments = GetDDElementComment(item.dddesc, "list-comments mathjax");
+				dto.AbstractText = includeAbstract ? GetDDElementAbstract(item.dddesc, "mathjax") : string.Empty;
+				dto.PrimarySubject = GetDDElementPrimarySubject(item.dddesc, "div", "class", "list-subjects", ")");
 
-				dto.Subjects = _GetDDElementSubjects(item.dddesc, "div", "class", "list-subjects");
-				dto.Authors = _GetDDElementAuthors(item.dddesc, "div", "class", "list-authors");
+				dto.SubjectItems = GetDDElementSubjects(item.dddesc, "div", "class", "list-subjects");
+				dto.Authors = GetDDElementAuthors(item.dddesc, "div", "class", "list-authors");
 
 				result.Add(dto);
 			}
@@ -217,7 +161,7 @@ namespace Scraper.Service.Scrapers
 			return result;
 		}
 
-		private List<AuthorDto> _GetDDElementAuthors(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue)
+		private List<AuthorDto> GetDDElementAuthors(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue)
 		{
 			var authorNodes = nodes
 				?.Where(a => a.HasAttributes && a.Name == tag && a.Attributes.AttributeExists("class", attributeValue))
@@ -243,18 +187,18 @@ namespace Scraper.Service.Scrapers
 
 		}
 
-		private List<SubjectItemDto> _GetDDElementSubjects(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue, string repalceWith = "")
+		private List<SubjectItemDto> GetDDElementSubjects(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue, string repalceWith = "")
 		{
 			var subjNode = nodes
 				?.Where(a => a.HasAttributes && a.Name == tag && a.Attributes.AttributeExists("class", attributeValue))
 				?.FirstOrDefault();
 
 			return subjNode != null ?
-				_GetSubjectArray(subjNode.InnerText?.Trim())
+				GetSubjectArray(subjNode.InnerText?.Trim())
 				: new List<SubjectItemDto>();
 		}
 
-		private string[] _GetDDElementPrimarySubject(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue, string repalceWith = "")
+		private string[] GetDDElementPrimarySubject(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue, string repalceWith = "")
 		{
 			var subjNode = nodes
 				?.Where(a => a.HasAttributes && a.Name == tag && a.Attributes.AttributeExists("class", attributeValue))
@@ -267,7 +211,7 @@ namespace Scraper.Service.Scrapers
 				?.Split('(') ?? new string[2];
 		}
 
-		private string _GetDDElementTitle(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue, string repalceWith = "")
+		private string GetDDElementTitle(IEnumerable<HtmlNode> nodes, string tag, string attribute, string attributeValue, string repalceWith = "")
 		{
 			if (nodes != null && nodes.Count() > 0)
 			{
@@ -280,7 +224,7 @@ namespace Scraper.Service.Scrapers
 			return "";
 		}
 
-		private string _GetDDElementComment(IEnumerable<HtmlNode> nodes, string className)
+		private string GetDDElementComment(IEnumerable<HtmlNode> nodes, string className)
 		{
 			if (nodes != null && nodes.Count() > 0)
 			{
@@ -294,7 +238,7 @@ namespace Scraper.Service.Scrapers
 			return "";
 		}
 
-		private string _GetDDElementAbstract(IEnumerable<HtmlNode> nodes, string className)
+		private string GetDDElementAbstract(IEnumerable<HtmlNode> nodes, string className)
 		{
 			if (nodes != null && nodes.Count() > 0)
 			{
@@ -307,7 +251,7 @@ namespace Scraper.Service.Scrapers
 			return "";
 		}
 
-		private string _GetDtElementAttributeValue(IEnumerable<HtmlNode> nodes, string titleValue)
+		private string GetDtElementAttributeValue(IEnumerable<HtmlNode> nodes, string titleValue)
 		{
 			if (nodes != null && nodes.Count() > 0)
 			{
@@ -320,7 +264,7 @@ namespace Scraper.Service.Scrapers
 			return "";
 		}
 
-		private string _GetDtElementInnerText(IEnumerable<HtmlNode> nodes, string titleValue)
+		private string GetDtElementInnerText(IEnumerable<HtmlNode> nodes, string titleValue)
 		{
 			if (nodes != null && nodes.Count() > 0)
 			{
@@ -426,7 +370,7 @@ namespace Scraper.Service.Scrapers
 			return result;
 		}
 
-		private List<SubjectItemDto> _GetSubjectArray(string input)
+		private List<SubjectItemDto> GetSubjectArray(string input)
 		{
 			List<SubjectItemDto> dto
 			   = new List<SubjectItemDto>();
@@ -445,7 +389,7 @@ namespace Scraper.Service.Scrapers
 			return dto;
 		}
 
-		private List<AuthorDto> _GetAuthors(HtmlNode authorNode)
+		private List<AuthorDto> GetAuthors(HtmlNode authorNode)
 		{
 			List<AuthorDto> authors = new List<AuthorDto>();
 			var authorNodes = authorNode.ChildNodes.Where(n => n.Name == "a").ToList();
@@ -463,16 +407,6 @@ namespace Scraper.Service.Scrapers
 			}
 
 			return authors;
-		}
-
-		private string GetDisplayDateString(string h3Text)
-        {
-			if (string.IsNullOrEmpty(h3Text))
-				return string.Empty;
-
-			string[] arr = h3Text.Split("for".ToCharArray(), StringSplitOptions.None);
-
-			return arr.Length > 1 ? arr[1].Trim() : string.Empty;
 		}
 
 		#endregion Private

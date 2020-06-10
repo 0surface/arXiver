@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Scraper.API.Application.Queries;
 using Scraper.API.Infrastructure;
+using Scraper.API.Infrastructure.Mapping;
 using Scraper.API.Infrastructure.Repositories;
 using Scraper.Service.Scrapers;
 using System.Reflection;
@@ -128,6 +129,7 @@ namespace Scraper.API
             services.AddTransient<IArticleQueries, ArticleQueries>();
             services.AddScoped<IArticleListScraper, ArticleListScraper>();
             services.AddScoped<IArticleItemRepository, ArticleItemRepository>();
+            services.AddScoped<IScrapeMapper, ScrapeMapper>();
             return services;
         }
     }
