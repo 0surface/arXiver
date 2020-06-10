@@ -21,7 +21,8 @@ namespace Scraper.API.Application.Queries
     {
         public string ArxivId { get; set; }
         public string Title { get; set; }
-        public SubjectItemVM PrimarySubject { get; set; }
+        public string SubjectCode { get; set; }
+        public string SubjectName { get; set; }
     }
 
     public class SubjectItemVM

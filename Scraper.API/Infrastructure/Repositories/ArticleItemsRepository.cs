@@ -31,12 +31,10 @@ namespace Scraper.API.Infrastructure.Repositories
 
                 return articles.Count > 0 ? _context.SaveChanges() : 0;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                var c = ex.Message;
                 return 0;
             }
         }
-
     }
 }

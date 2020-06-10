@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Scraper.API.Application.Queries;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Scraper.API.Controllers
@@ -21,11 +22,17 @@ namespace Scraper.API.Controllers
             _articleQueries = articleQueries ?? throw new ArgumentNullException(nameof(articleQueries));
         }
 
-        [HttpGet]
+        [HttpGet("summary")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public async Task<ActionResult<IEnumerable<ArticleItemSummaryVM>>> GetSummaryArticleItemsAsync(string subjectId)
         {
-            var summary = await _articleQueries.GetSummaryArticleItemsAsync(subjectId);
-            return Ok(summary);
+            var summary = await _articleQueries.GetSummaryArticlesAsync(subjectId);
+
+            if (summary != null)
+                return Ok(summary);
+            else
+                return NotFound();
         }
     }
 }
