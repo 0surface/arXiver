@@ -6,14 +6,36 @@ using System.IO;
 
 namespace Scraper.API.Infrastructure
 {
-    public class ArticleContext : DbContext
+    public interface IArticleContext
+    {
+         DbSet<Article> Articles { get; set; }
+         DbSet<Version> Versions { get; set; }
+         DbSet<AuthorArticle> AuthorArticles { get; set; }
+         DbSet<SubjectItemArticle> SubjectItemArticles { get; set; }
+         DbSet<Subject> Subjects { get; set; }
+
+        int SaveChanges();
+    }
+
+    public class ArticleContext : DbContext, IArticleContext
     {
         public DbSet<Article> Articles { get; set; }
         public DbSet<Version> Versions { get; set; }
         public DbSet<AuthorArticle> AuthorArticles { get; set; }
         public DbSet<SubjectItemArticle> SubjectItemArticles { get; set; }
-
         public DbSet<Subject> Subjects { get; set; }
+
+        private IConfiguration Configuration { get; set; }
+
+        public ArticleContext()
+        {
+            var builder = new ConfigurationBuilder()
+                 .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddEnvironmentVariables();
+
+            Configuration = builder.Build();
+        }
 
         public ArticleContext(DbContextOptions<ArticleContext> options) : base(options) { }
 

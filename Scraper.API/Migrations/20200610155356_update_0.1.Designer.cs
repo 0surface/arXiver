@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Scraper.API.Infrastructure;
 
 namespace Scraper.API.Migrations
 {
     [DbContext(typeof(ArticleContext))]
-    partial class ArticleContextModelSnapshot : ModelSnapshot
+    [Migration("20200610155356_update_0.1")]
+    partial class update_01
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

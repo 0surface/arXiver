@@ -4,7 +4,7 @@
     "anonymousAuthentication": true,
     "iisExpress": {
       "applicationUrl": "http://localhost:63980",
-      "sslPort": 44334
+      "sslPort": 0
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",
@@ -12,7 +12,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "articles",
+      "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -20,7 +20,7 @@
     "Scraper.API": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "articles",
+      "launchUrl": "home",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
