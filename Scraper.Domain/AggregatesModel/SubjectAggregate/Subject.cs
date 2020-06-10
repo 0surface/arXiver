@@ -9,7 +9,10 @@ namespace Scraper.Domain.AggregatesModel.SubjectAggregate
     {
         public string Code { get; private set; }
         public string Name { get; private set; }
-        public Discipline Discipline { get; private set; }
+        public string GroupCode { get; private set; }
+        public string GroupName { get; private set; }        
+        public string Discipline { get; private set; }
+
 
         private List<string> _categories;
         public IReadOnlyCollection<string> Categories => _categories;
@@ -17,13 +20,17 @@ namespace Scraper.Domain.AggregatesModel.SubjectAggregate
         protected Subject() 
         {
             _categories = new List<string>();
-            Discipline = null;
         }
 
-        public Subject(string subjectCode, string name)
+        public Subject(string subjectCode, string name
+            ,string groupName, string groupCode, string discipline)
         {
             Code = subjectCode;
             Name = name;
+            GroupName = groupName;
+            GroupCode = groupCode;
+            Discipline = discipline;
+            _categories = new List<string>();
         }
 
         public void AddCategories(string catagory)
@@ -33,17 +40,6 @@ namespace Scraper.Domain.AggregatesModel.SubjectAggregate
                 _categories.Add(catagory);
             }
         }
-
-        public void AddDiscipline(string code)
-        {
-            if (!string.IsNullOrEmpty(code) && Discipline == null)
-            {
-                var matching = Enumeration.GetAll<Discipline>().Where(x => x.Code == code).FirstOrDefault();
-                if(matching != null)
-                {
-                    Discipline = matching;
-                }
-            }
-        }
     }
 }
+
