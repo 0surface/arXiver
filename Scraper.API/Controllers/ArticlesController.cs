@@ -25,9 +25,23 @@ namespace Scraper.API.Controllers
         [HttpGet("summary")]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<ActionResult<IEnumerable<ArticleItemSummaryVM>>> GetSummaryArticleItemsAsync(string subjectId)
+        public async Task<ActionResult<IEnumerable<ArticleItemSummaryVM>>> GetSummaryArticlesAsync(string subjectCode)
         {
-            var summary = await _articleQueries.GetSummaryArticlesAsync(subjectId);
+            var summary = await _articleQueries.GetSummaryArticlesAsync(subjectCode);
+
+            if (summary != null)
+                return Ok(summary);
+            else
+                return NotFound();
+        }
+
+
+        [HttpGet("full")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        public async Task<ActionResult<IEnumerable<ArticleItemVM>>> GetArticlesAsync(string subjectCode)
+        {
+            var summary = await _articleQueries.GetArticlesAsync(subjectCode);
 
             if (summary != null)
                 return Ok(summary);

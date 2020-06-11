@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Scraper.API.Application.Queries
 {
     public class ArticleItemVM
     {
-        public string DisplayDate { get; set; }
+        public DateTime DisplayDate { get; set; }
+        public DateTime ScrapedDate { get; set; }
         public string ArxivId { get; set; }
         public string AbstractUrl { get; set; }
         public string PdfUrl { get; set; }
@@ -28,13 +30,13 @@ namespace Scraper.API.Application.Queries
     public class SubjectItemVM
     {
         public string Code { get; set; }
-        public string Description { get; set; }
+        public string Name { get; set; }
     }
 
     public class AuthorVM
     {
         public string Code { get; set; }
-        public string FullName { get; set; }
-        public string ContextUrl { get; set; }
+        public string Name { get; set; }        
     }
 }
+

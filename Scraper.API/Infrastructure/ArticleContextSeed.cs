@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
@@ -8,7 +7,6 @@ using Polly.Retry;
 using Scraper.API.Extensions;
 using Scraper.Domain.AggregatesModel.ArticleAggregate;
 using Scraper.Domain.AggregatesModel.SubjectAggregate;
-using Scraper.Domain.SeedWork;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -58,7 +56,7 @@ namespace Scraper.API.Infrastructure
                     {
                         context.SubjectItems.AddRange(useCustomizationData
                             ? GetPredefinedSubjectItems()
-                            :GetSubjectItemsFromFile(contentRootPath, logger));
+                            : GetSubjectItemsFromFile(contentRootPath, logger));
                     }
 
                     await context.SaveChangesAsync();
@@ -67,7 +65,7 @@ namespace Scraper.API.Infrastructure
         }
 
         #region Article Aggregate
-        
+
         private IEnumerable<SubjectItem> GetPredefinedSubjectItems()
         {
             return new List<SubjectItem>()

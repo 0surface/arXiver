@@ -10,7 +10,7 @@ using Scraper.API.Infrastructure;
 namespace Scraper.API.Migrations
 {
     [DbContext(typeof(ArticleContext))]
-    [Migration("20200610215532_initial")]
+    [Migration("20200611124423_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -125,20 +125,15 @@ namespace Scraper.API.Migrations
 
             modelBuilder.Entity("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItemArticle", b =>
                 {
-                    b.Property<int>("ArticleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("ArticleId1")
-                        .HasColumnType("int");
-
                     b.Property<int>("SubjectItemId")
                         .HasColumnType("int");
 
-                    b.HasKey("ArticleId");
+                    b.Property<int>("ArticleId")
+                        .HasColumnType("int");
 
-                    b.HasIndex("ArticleId1");
+                    b.HasKey("SubjectItemId", "ArticleId");
+
+                    b.HasIndex("ArticleId");
 
                     b.ToTable("SubjectItemArticles");
                 });
@@ -224,7 +219,13 @@ namespace Scraper.API.Migrations
                 {
                     b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.Article", "Article")
                         .WithMany("SubjectItemArticles")
-                        .HasForeignKey("ArticleId1")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Scraper.Domain.AggregatesModel.ArticleAggregate.SubjectItem", "SubjectItem")
+                        .WithMany()
+                        .HasForeignKey("SubjectItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

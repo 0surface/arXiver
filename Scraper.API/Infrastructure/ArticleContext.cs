@@ -58,7 +58,7 @@ namespace Scraper.API.Infrastructure
             /* This helps EF core understand the intended database schema, 
              * setting up a Many-To-Many relationship between Article and author */
             modelBuilder.Entity<AuthorArticle>().HasKey(s => new { s.AuthorId, s.ArticleId });
-            modelBuilder.Entity<SubjectItemArticle>().HasKey(s => new { s.ArticleId });
+            modelBuilder.Entity<SubjectItemArticle>().HasKey(s => new { s.SubjectItemId, s.ArticleId });
 
             modelBuilder.Entity<Author>().ToTable("Authors");
             modelBuilder.Entity<SubjectItem>().ToTable("SubjectItems");
