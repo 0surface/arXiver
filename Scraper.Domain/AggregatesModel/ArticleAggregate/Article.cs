@@ -93,44 +93,48 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
             }
         }
 
-        public void AddPrimarySubject(string code, string name)
+        /// <summary>
+        /// Constructs and Adds a SubjectItemArticle object to SubjectItemArticles list.
+        /// Avoids duplication by checking if the item exists in the list.
+        /// </summary>
+        /// <param name="subjectItem"></param>
+        public void AddSubjectItem(SubjectItem subjectItem)
         {
-            AddSubjectItem(code, name, true);
-        }
-
-        public void AddSubjectItem(string code, string name, bool isPrimary = false)
-        {
-            //if (SubjectItemArticles.Exists(sa => sa.SubjectItem.Code == code) == false)
-            //{
-                var item = new SubjectItemArticle()
+            if (!SubjectItemArticles.Exists(s => s.SubjectItemId == subjectItem.Id))
+            {
+                SubjectItemArticles.Add(new SubjectItemArticle()
                 {
                     Article = this,
-                    // SubjectItem = new SubjectItem(code, name, isPrimary)
-                };
-
-                SubjectItemArticles.Add(item);
-            //}
+                    SubjectItemId = subjectItem.Id
+                });
+            }
         }
 
-        public void AddExistingSubjectItem(SubjectItem subjectItem)
+        /// <summary>
+        /// Note: Used only when the database has not been seeded.
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="name"></param>
+        public void CreatePrimarySubject(string code, string name)
         {
-            SubjectItemArticles.Add(new SubjectItemArticle()
+            CreateSubjectItem(code, name, true);
+        }
+
+        /// <summary>
+        /// Note: Used only when the database has not been seeded.
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="name"></param>
+        /// <param name="isPrimary"></param>
+        public void CreateSubjectItem(string code, string name, bool isPrimary = false)
+        {
+            var item = new SubjectItemArticle()
             {
                 Article = this,
-                SubjectItemId =subjectItem.Id
-                //SubjectItem = subjectItem
-            });
-        }       
-
-        //public void AddSubject(string subjectCode, string name, bool isPrimary)
-        //{
-        //    var existingSubjectForPaper = _subjectItems.Where(s => s.Code == subjectCode).SingleOrDefault();
-
-        //    if(existingSubjectForPaper == null)
-        //    {
-        //        _subjectItems.Add(new SubjectItem(subjectCode, name, isPrimary));
-        //    }
-        //}
+                SubjectItem = new SubjectItem(code, name, isPrimary)
+            };
+            SubjectItemArticles.Add(item);
+        }
 
         public void AddDisplayDate(string input)
         {
