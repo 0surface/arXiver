@@ -1,7 +1,7 @@
 ﻿using HtmlAgilityPack;
 using Scraper.Domain.AggregatesModel.ArticleAggregate;
 using Scraper.Service.Util;
-using Scraper.Types.Service;
+using Scraper.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;

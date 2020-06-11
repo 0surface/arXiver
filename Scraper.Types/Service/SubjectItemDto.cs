@@ -1,4 +1,4 @@
-﻿namespace Scraper.Types.Service
+﻿namespace Scraper.Types
 {
     public class SubjectItemDto
     {

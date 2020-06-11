@@ -1,6 +1,6 @@
 ﻿using HtmlAgilityPack;
 using Scraper.Service.Util;
-using Scraper.Types.Service;
+using Scraper.Types;
 using System.Threading;
 using System.Threading.Tasks;
 
