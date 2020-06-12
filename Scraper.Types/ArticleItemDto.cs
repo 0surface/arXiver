@@ -3,8 +3,12 @@
 namespace Scraper.Types
 {
     public class ArticleItemDto
-    {
+    {   
+        public string PageHeaderInfo { get; set; }
+        public string DateContextInfo { get; set; }
         public string H3HeaderText { get; set; }
+
+        public string ArxivIdLabel { get; set; }
         public string ArxivId { get; set; }
         public string AbstractUrl { get; set; }
         public string PdfUrl { get; set; }

@@ -9,5 +9,7 @@
         CrossList = 2,
 
         Replacement = 3,
+
+        CatchUp = 4,
     }
 }

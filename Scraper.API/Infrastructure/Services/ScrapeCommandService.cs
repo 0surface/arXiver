@@ -189,9 +189,9 @@ namespace Scraper.API.Infrastructure.Services
                         }
                     }
 
-                    article.AddDisplayDate(GetDisplayDateString(dto.H3HeaderText));
+                    article.AddDisplayDate(GetDisplayDateString(dto.H3HeaderText, dto.DateContextInfo));
 
-                    article.AddScrapeContext(dto.H3HeaderText);
+                    article.AddScrapeContext(dto.PageHeaderInfo, dto.ArxivIdLabel, dto.H3HeaderText);
 
                     articles.Add(article);
                 }
@@ -201,10 +201,13 @@ namespace Scraper.API.Infrastructure.Services
             return articles;
         }
 
-        private string GetDisplayDateString(string h3Text)
+        private string GetDisplayDateString(string h3Text, string dateInfo)
         {
-            if (string.IsNullOrEmpty(h3Text))
+            if (string.IsNullOrEmpty(h3Text) && string.IsNullOrEmpty(dateInfo))
                 return string.Empty;
+
+            if (!string.IsNullOrEmpty(dateInfo))
+                return dateInfo;
 
             string[] sep = { "for" };
 
