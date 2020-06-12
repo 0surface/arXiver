@@ -31,8 +31,7 @@ namespace Scraper.API.Controllers
         [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> NewBySubjectCode(string subjectCode, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(subjectCode) || string.IsNullOrEmpty(subjectCode))
-                return BadRequest();
+            if (string.IsNullOrEmpty(subjectCode)) return BadRequest();
 
             string newSubmissionsUrl = $"{baseUrl}/list/{subjectCode}/new";
 
@@ -51,17 +50,35 @@ namespace Scraper.API.Controllers
         [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> NewBySubjectGroup(string subjectGroup, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(subjectGroup) || string.IsNullOrEmpty(subjectGroup))
-                return BadRequest();
+            if (string.IsNullOrEmpty(subjectGroup)) return BadRequest();
 
             string newSubmissionsUrl = $"{baseUrl}/list/{subjectGroup}/new";
 
-            int result  = await _scrapeCommandService.SubmissionsBySubjectGroupAsync(newSubmissionsUrl, subjectGroup, cancellationToken);
+            int result = await _scrapeCommandService.SubmissionsBySubjectGroupAsync(newSubmissionsUrl, subjectGroup, cancellationToken);
 
             return result >= 1 ? Ok() :
                   (result == 0) ? NoContent() : StatusCode((int)HttpStatusCode.InternalServerError);
         }
 
+        [HttpPost("catchupbygroup")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType((int)HttpStatusCode.NoContent)]
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> CatchUpBySubjectGroup(string subjectGroup, string startDay, string startMonth,
+                                                  string startYear, string returnAmount, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(subjectGroup)) return BadRequest();
+
+            string catchUpUrl = $"{baseUrl}/catchup?smonth={startMonth}&group=grp_&sday={startDay}&num={returnAmount}&archive={subjectGroup}&method=with&syear={startYear}";
+
+            int result = await _scrapeCommandService.CatchupBySubjectGroupAsync(catchUpUrl,
+                                                            subjectGroup, startDay, startMonth, startYear, returnAmount
+                                                            , cancellationToken);
+
+            return result >= 1 ? Ok() :
+                (result == 0) ? NoContent() : StatusCode((int)HttpStatusCode.InternalServerError);
+        }
     }
 }
 

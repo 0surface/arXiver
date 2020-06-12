@@ -7,7 +7,6 @@ using Scraper.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +16,8 @@ namespace Scraper.API.Infrastructure.Services
     {
         Task<int> SubmissionsBySubjectCodeAsync(string url, string subjectCode, CancellationToken cancellationToken);
         Task<int> SubmissionsBySubjectGroupAsync(string url, string subjectGroup, CancellationToken cancellationToken);
+        Task<int> CatchupBySubjectGroupAsync(string url, string subjectGroup, string startDay, string startMonth,
+                                                  string startYear, string returnAmount, CancellationToken cancellationToken);
     }
 
     public class ScrapeCommandService : IScrapeCommandService
@@ -46,13 +47,13 @@ namespace Scraper.API.Infrastructure.Services
             try
             {
                 List<ArticleItemDto> dtoList =
-                    await _articleListScraper.GetArticles(url, true, true, cancellationToken);
+                    await _articleListScraper.GetArticles(url, true, cancellationToken);
 
                 List<Article> articles = MapArticlesToDomain(dtoList);
 
                 if (articles == null) return 0;
 
-                //Filter Submisisons
+                //Only include Submisisons
                 List<Article> submissions = articles
                     .Where(a => a.ScrapeContext == ArticleScrapeContextEnum.Submission)
                     ?.ToList();
@@ -80,19 +81,19 @@ namespace Scraper.API.Infrastructure.Services
             try
             {
                 List<ArticleItemDto> dtoList =
-                    await _articleListScraper.GetArticles(url, true, true, cancellationToken);
+                    await _articleListScraper.GetArticles(url, true, cancellationToken);
 
                 List<Article> articles = MapArticlesToDomain(dtoList);
 
                 if (articles == null) return 0;
 
-                //Filter Submisisons
+                //Only include Submisisons
                 List<Article> submissions = articles
                         .Where(a => a.ScrapeContext == ArticleScrapeContextEnum.Submission)
                         ?.ToList();
 
                 //Filter existing Articles
-                var existingArxivIds = await  _context.SubjectItemArticles
+                var existingArxivIds = await _context.SubjectItemArticles
                                        .Where(j => j.Article.DisplayDate.Date == DateTime.Now.Date)
                                        ?.Select(a => a.Article.ArxivId)
                                        ?.ToListAsync();
@@ -110,8 +111,44 @@ namespace Scraper.API.Infrastructure.Services
             }
         }
 
+        public async Task<int> CatchupBySubjectGroupAsync(string url, string subjectGroup, string startDay, string startMonth,
+                                                  string startYear, string returnAmount, CancellationToken cancellationToken)
+        {
+            try
+            {
+                List<ArticleItemDto> dtoList =
+                    await _articleListScraper.GetCatchUpArticles(url, true, cancellationToken);
+
+                List<Article> articles = MapArticlesToDomain(dtoList);
+
+                if (articles == null) return 0;
+
+                // Only include in Catchup only
+                List<Article> catchups = articles
+                        .Where(a => a.ScrapeContext == ArticleScrapeContextEnum.CatchUp)
+                        ?.ToList();
+
+                //Filter existing Articles
+                var existingArxivIds = await _context.SubjectItemArticles
+                                       .Where(j => j.Article.DisplayDate.Date == DateTime.Now.Date)
+                                       ?.Select(a => a.Article.ArxivId)
+                                       ?.ToListAsync();
+
+                List<Article> newCatchups = catchups
+                       .Where(a => !existingArxivIds.Contains(a.ArxivId))
+                       .ToList();
+
+                //Persist to Database
+                return _repo.SaveBySubjectGroup(newCatchups);
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
+        }
+
         #region Private
-        
+
         private List<Article> MapArticlesToDomain(List<ArticleItemDto> dtoList)
         {
             List<Article> articles = new List<Article>();
