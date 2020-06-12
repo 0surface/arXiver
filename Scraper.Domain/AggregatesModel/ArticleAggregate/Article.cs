@@ -143,15 +143,29 @@ namespace Scraper.Domain.AggregatesModel.ArticleAggregate
                 : DateTime.MinValue;
         }
 
-        public void AddScrapeContext(string input)
+        public void AddScrapeContext(string pageHeader,string arxivIdLabel, string h3Text)
         {
-            if (!string.IsNullOrEmpty(input))
+            if (!string.IsNullOrEmpty(pageHeader)
+                && pageHeader.ToLower().Contains("catchup"))
             {
-                if (input.ToLower().Contains("submission"))
+                ScrapeContext = ArticleScrapeContextEnum.CatchUp;
+            }
+
+                if (!string.IsNullOrEmpty(arxivIdLabel))
+            {
+                if(arxivIdLabel.ToLower().Contains("replaced"))
+                    ScrapeContext = ArticleScrapeContextEnum.Replacement;
+                else if(arxivIdLabel.ToLower().Contains("cross-list"))
+                     ScrapeContext = ArticleScrapeContextEnum.CrossList;
+            }
+
+            if (!string.IsNullOrEmpty(h3Text))
+            {
+                if (h3Text.ToLower().Contains("submission"))
                     ScrapeContext = ArticleScrapeContextEnum.Submission;
-                else if (input.ToLower().Contains("cross-lists") || input.ToLower().Contains("cross"))
+                else if (h3Text.ToLower().Contains("cross-list") || h3Text.ToLower().Contains("cross"))
                     ScrapeContext = ArticleScrapeContextEnum.CrossList;
-                else if (input.ToLower().Contains("Replacement"))
+                else if (h3Text.ToLower().Contains("Replacement"))
                     ScrapeContext = ArticleScrapeContextEnum.Replacement;
             }
         }

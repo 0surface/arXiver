@@ -11,6 +11,7 @@ namespace Scraper.UnitTests.Service
             HtmlDocument doc = new HtmlDocument();
             public int CorrectArticleListCount { get; set; }
             public int InvalidArticleListCount { get; set; }
+            private readonly string baseTestDataLocation = "Scraper.UnitTests.Service.TestData";
 
             public ArticleListTestBuilder()
             {
@@ -34,6 +35,13 @@ namespace Scraper.UnitTests.Service
             public HtmlDocument ArticleList_withoutAbstract_HtmlDocument()
             {
                 doc.LoadHtml(ArticleListRawHtml(false));
+                return doc;
+            }
+
+            public HtmlDocument ArticleList_Catchup_SubjectGroup_HtmlDocument()
+            {
+                string catchup_SubjectGroup_HtmlDocument = $"{baseTestDataLocation}.ArticleList_Catchup_SubjectGroup_TestHtmlData.html";
+                doc.LoadHtml(DocReader.ReadDocument(catchup_SubjectGroup_HtmlDocument));
                 return doc;
             }
 

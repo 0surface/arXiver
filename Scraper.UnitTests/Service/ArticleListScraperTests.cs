@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
 using Scraper.Service.Scrapers;
+using System.Linq;
 using Xunit;
 using static Scraper.UnitTests.Service.Builders;
 
@@ -53,6 +54,29 @@ namespace Scraper.UnitTests.Service
             var sut = _scraper.GetArticleList(doc, true)[1].AbstractText;
 
             //Assert
+            Assert.Equal(sut, expected);
+        }
+
+        [Fact]
+        public void Extracts_Articles_from_Catchup_Archive_HtmlDocument()
+        {
+            HtmlDocument doc = _articleListTestBuilder.ArticleList_Catchup_SubjectGroup_HtmlDocument();
+            int expected = 299;
+
+            var sut = _scraper.GetCatchUpArticleList(doc).Count();
+
+            Assert.Equal(sut, expected);
+        }
+
+        [Fact]
+        public void Labels_Context_Of_Catchup_Archive_Articles_As_Replaced()
+        {
+            HtmlDocument doc = _articleListTestBuilder.ArticleList_Catchup_SubjectGroup_HtmlDocument();
+            int expected = 150;
+
+            var sut = _scraper.GetCatchUpArticleList(doc)
+                                 .Where(r => r.ArxivIdLabel == "replaced").Count();
+
             Assert.Equal(sut, expected);
         }
     }
