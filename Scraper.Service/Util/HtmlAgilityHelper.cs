@@ -43,6 +43,23 @@ namespace Scraper.Service.Util
             return null;
         }
 
+        public static HtmlNode GetPreviousSibling(this HtmlNode htmlNode, string nodeName)
+        {
+            var currentNode = htmlNode;
+
+            while (currentNode != null)
+            {
+                currentNode = currentNode.PreviousSibling;
+
+                if (currentNode != null && currentNode.NodeType == HtmlNodeType.Element
+                    && currentNode.Name == nodeName)
+                    return currentNode;
+            }
+
+            return null;
+        }
+
+
         public static bool AttributeExists(this HtmlAttributeCollection collection, string name, string value)
         {
             if (collection == null) return false;
