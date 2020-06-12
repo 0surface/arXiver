@@ -68,16 +68,24 @@ namespace Scraper.API.Controllers
         public async Task<IActionResult> CatchUpBySubjectGroup(string subjectGroup, string startDay, string startMonth,
                                                   string startYear, string returnAmount, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(subjectGroup)) return BadRequest();
+            if (string.IsNullOrEmpty(subjectGroup))
+                return BadRequest();
 
             string catchUpUrl = $"{baseUrl}/catchup?smonth={startMonth}&group=grp_&sday={startDay}&num={returnAmount}&archive={subjectGroup}&method=with&syear={startYear}";
 
-            int result = await _scrapeCommandService.CatchupBySubjectGroupAsync(catchUpUrl,
-                                                            subjectGroup, startDay, startMonth, startYear, returnAmount
-                                                            , cancellationToken);
+            (int, string) repoResult_ContinueUrl =
+                await _scrapeCommandService.CatchupBySubjectGroupAsync(catchUpUrl, cancellationToken);
 
-            return result >= 1 ? Ok() :
-                (result == 0) ? NoContent() : StatusCode((int)HttpStatusCode.InternalServerError);
+            int repoResult = repoResult_ContinueUrl.Item1;
+
+            string continueUrl = $"{baseUrl}{repoResult_ContinueUrl.Item2}";
+
+            if (repoResult >= 1)
+                return Content(continueUrl);
+
+            return (repoResult == 0) ?
+                  NoContent()
+                : StatusCode((int)HttpStatusCode.InternalServerError);
         }
     }
 }

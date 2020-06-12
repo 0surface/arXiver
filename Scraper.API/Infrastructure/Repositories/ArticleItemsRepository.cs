@@ -29,7 +29,7 @@ namespace Scraper.API.Infrastructure.Repositories
             {
                 _context.Articles.AddRange(articles);
 
-                return articles.Count > 0  
+                return articles.Count > 0
                             ? _context.SaveChanges() : 0;
             }
             catch (Exception)

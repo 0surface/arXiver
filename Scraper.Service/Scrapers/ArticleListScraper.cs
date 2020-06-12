@@ -4,7 +4,7 @@ using Scraper.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,11 +17,11 @@ namespace Scraper.Service.Scrapers
 
         List<ArticleItemDto> ScrapeArticleList(HtmlDocument htmlDocument, bool includeAbstract);
 
-        List<ArticleItemDto> ScrapeCatchUpArticleList(HtmlDocument htmlDocument, bool includeAbstract);
+        (List<ArticleItemDto>, string) ScrapeCatchUpArticleList(HtmlDocument htmlDocument, bool includeAbstract);
 
         Task<List<ArticleItemDto>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
 
-        Task<List<ArticleItemDto>> GetCatchUpArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
+        Task<(List<ArticleItemDto>, string)> GetCatchUpArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
     }
 
     public class ArticleListScraper : IArticleListScraper
@@ -70,25 +70,31 @@ namespace Scraper.Service.Scrapers
             }
         }
 
-        public List<ArticleItemDto> ScrapeCatchUpArticleList(HtmlDocument htmlDocument, bool includeAbstract = true)
+        public (List<ArticleItemDto>, string) ScrapeCatchUpArticleList(HtmlDocument htmlDocument, bool includeAbstract = true)
         {
             List<ArticleItemDto> result = new List<ArticleItemDto>();
+            string continueUrl = string.Empty;
+
             List<int> eachPass = new List<int>();
             try
             {
                 var parsedHtml = (from info in htmlDocument.DocumentNode.SelectNodes("//div[@id='dlpage']")
-                           from dlElement in info.SelectNodes("dl")
-                           let h1Page = info.SelectSingleNode("h1")
-                           let parentH3 = dlElement.GetPreviousSibling("h2")
-                           select new
-                           {
-                               h1 = h1Page,
-                               date_info = parentH3,
-                               dl = dlElement
-                           }).ToList();
+                                  from dlElement in info.SelectNodes("dl")
+                                  let olElement = info.SelectSingleNode("ol")
+                                  let h1Page = info.SelectSingleNode("h1")
+                                  let parentH3 = dlElement.GetPreviousSibling("h2")
+                                  select new
+                                  {
+                                      ol = olElement,
+                                      h1 = h1Page,
+                                      date_info = parentH3,
+                                      dl = dlElement
+                                  }).ToList();
 
                 if (parsedHtml == null || parsedHtml.Count < 0)
-                    return result;
+                    return (result, continueUrl);
+
+                continueUrl = GetCatchUpContinueUrl(parsedHtml[0]?.ol?.ChildNodes);
 
                 //Html Page title information -used to eastablish the Scrape Context Enum (New, Recent, Catchup etc...)
                 var pageInfo = parsedHtml[0].h1?.InnerText;
@@ -104,53 +110,11 @@ namespace Scraper.Service.Scrapers
 
                     eachPass.Add(list.Count);
                     result?.AddRange(list);
-                }              
-            }
-            catch (Exception) { }
-
-            return result;
-        }
-
-        public List<ArticleItemDto> _ScrapeCatchUpArticleList(HtmlDocument htmlDocument, bool includeAbstract = true)
-        {
-            List<ArticleItemDto> result = new List<ArticleItemDto>();
-
-            try
-            {
-                var parsedHtml = (from info in htmlDocument.DocumentNode.SelectNodes("//div[@id='dlpage']")
-                                  from dlElement in info.SelectNodes("dl")
-                                  let h1Page = info.SelectSingleNode("h1")
-                                  let h2ElemDate = info.SelectSingleNode("h2")
-                                  let h3ElemContext = info.SelectSingleNode("h3")
-                                  select new
-                                  {
-                                      h1 = h1Page,
-                                      h2 = h2ElemDate,
-                                      h3 = h3ElemContext,
-                                      dl = dlElement
-                                  }).ToList();
-
-                if (parsedHtml == null || parsedHtml.Count < 0)
-                    return result;
-
-                string pageInfo = parsedHtml[0].h1?.InnerText ?? string.Empty;
-                string dateInfo = parsedHtml[0].h2?.InnerText ?? string.Empty;
-
-                for (int i = 0; i < parsedHtml.Count; i++)
-                {
-                    var list = ProcessCatchUpElements(
-                        pageInfo,
-                        dateInfo,
-                        parsedHtml[i].dl.Descendants("dt").ToArray(),
-                        parsedHtml[i].dl.Descendants("dd").ToArray(),
-                        true);
-
-                    result?.AddRange(list);
                 }
             }
             catch (Exception) { }
 
-            return result;
+            return (result, continueUrl);
         }
 
         public List<ArticleItemDto> ScrapeArticleList(HtmlDocument htmlDocument, bool includeAbstract = true)
@@ -205,18 +169,20 @@ namespace Scraper.Service.Scrapers
                 : new List<ArticleItemDto>();
         }
 
-        public async Task<List<ArticleItemDto>> GetCatchUpArticles(string url, bool includeAbstract, CancellationToken cancellationToken)
+        public async Task<(List<ArticleItemDto>, string)> GetCatchUpArticles(string url, bool includeAbstract, CancellationToken cancellationToken)
         {
             HtmlDocument doc = await HtmlAgilityHelper.GetHtmlDocument(url, cancellationToken);
+            string continueUrl = string.Empty;
+
 
             if (doc == null)
-                return new List<ArticleItemDto>();
+                return (new List<ArticleItemDto>(), continueUrl);
 
-            var articles = ScrapeCatchUpArticleList(doc, includeAbstract);
+            var result = ScrapeCatchUpArticleList(doc, includeAbstract);
 
-            return articles != null && articles.Count > 0
-                ? articles
-                : new List<ArticleItemDto>();
+            return result.Item1 != null && result.Item1.Count > 0
+                ? result
+                : (new List<ArticleItemDto>(), continueUrl);
         }
 
 
@@ -243,7 +209,7 @@ namespace Scraper.Service.Scrapers
                 };
 
                 ArticleItemDto dto = new ArticleItemDto();
-                               
+
                 dto.PageHeaderInfo = pageTitleInfo;
                 dto.DateContextInfo = dateInfo;
 
@@ -404,8 +370,6 @@ namespace Scraper.Service.Scrapers
             {
                 return nodes
                     ?.Where(a => a.Name == "a" && a.Attributes.AttributeExists("title", titleValue))?.FirstOrDefault()
-                    //?.Where(a => a.HasAttributes && a.Attributes["title"].Value == titleValue)
-                    //?.FirstOrDefault()
                     ?.GetAttributeValue("href", "") ?? "";
             }
             return "";
@@ -424,101 +388,21 @@ namespace Scraper.Service.Scrapers
 
         private string GetDtArxivIdLabel(string arxivIdInnerText)
         {
-            return (arxivIdInnerText.Contains('(') | arxivIdInnerText.Contains(')')) ?            
+            return (arxivIdInnerText.Contains('(') | arxivIdInnerText.Contains(')')) ?
                 arxivIdInnerText.RegexFindInBetweenStrings("(", ")")
-                :string.Empty;
+                : string.Empty;
         }
 
-        public void ViewNodes(HtmlDocument htmlDocument)
+        private string GetCatchUpContinueUrl(IEnumerable<HtmlNode> nodes)
         {
-            //var dt_Title_nodes = htmlDocument.DocumentNode.SelectNodes($"//div[@id='dlpage']/dl/dt//div[@class='list-identifier']//a[@title='Abstract']");//?.FirstOrDefault().InnerText ?? "";
-
-            var firstdl = htmlDocument.DocumentNode.SelectSingleNode($"//div[@id='dlpage']/dl");
-            var firsth3 = firstdl.PreviousSibling;
-            var seconddl = firstdl.NextSibling;
-
-            var pageNodes = htmlDocument.DocumentNode.SelectNodes($"//div[@id='dlpage']");
-            var dl_Title_nodes = htmlDocument.DocumentNode.SelectNodes($"//div[@id='dlpage']/dl");
-            var dt_nodes = htmlDocument.DocumentNode.SelectNodes($"//div[@id='dlpage']/dl/dt");
-            var dd_nodes = htmlDocument.DocumentNode.SelectNodes($"//div[@id='dlpage']/dl/dd");
-            var h3_nodes = htmlDocument.DocumentNode.SelectNodes($"//div[@id='dlpage']/h3");
-
-            var pc = pageNodes.Count;
-            var count_dl = dl_Title_nodes.Count;
-            var count_dt = dt_nodes.Count;
-
-
-
-            foreach (var item in pageNodes)
-            {
-                var parent = item.ParentNode;
-                var grandParent = parent.ParentNode;
-                var prev = item.PreviousSibling;
-                var next = item.NextSibling;
-                var child = item.ChildNodes;
-            }
-
-            foreach (var item in dl_Title_nodes)
-            {
-                var parent = item.ParentNode;
-                var grandParent = parent.ParentNode;
-                var prev = item.PreviousSibling;
-                var next = item.NextSibling;
-                var child = item.ChildNodes;
-            }
-
-            foreach (var item in dt_nodes)
-            {
-                var parent = item.ParentNode;
-                var grandParent = parent.ParentNode;
-
-                var ddelem = item.GetNextSibling("dd");
-
-                var prev = item.PreviousSibling;
-                var next = item.NextSibling;
-                var child = item.ChildNodes;
-            }
-
-            foreach (var item in dd_nodes)
-            {
-                var parent = item.ParentNode;
-                var grandParent = parent.ParentNode;
-                var prev = item.PreviousSibling;
-                var next = item.NextSibling;
-                var child = item.ChildNodes;
-            }
-
-        }
-
-        private List<Tuple<string, HtmlNode>> GetArticlesByPublicationDate(HtmlDocument htmlDocument)
-        {
-            List<Tuple<string, HtmlNode>> result = new List<Tuple<string, HtmlNode>>();
-            try
-            {
-                var parseMain = (from info in htmlDocument.DocumentNode.SelectNodes("//div[@id='dlpage']")
-                                 from h3Element in info.SelectNodes("h3")
-                                 let dlElement = h3Element.GetNextSibling("dl")
-                                 where dlElement != null
-                                 select new
-                                 {
-                                     h3 = h3Element.InnerText,
-                                     dl = dlElement
-                                 }).ToList();
-
-                foreach (var item in parseMain)
-                {
-                    Tuple<string, HtmlNode> publicationDate =
-                        new Tuple<string, HtmlNode>(item.h3, item.dl);
-                    result.Add(publicationDate);
-                }
-
-            }
-            catch (Exception ex)
-            {
-                var c = ex.Message;
-            }
-
-            return result;
+            return WebUtility.HtmlDecode(nodes
+                 ?.Where(n => n.Name == "li"
+                            && n.InnerText.ToLower().Contains("continue"))
+                 ?.FirstOrDefault()
+                 ?.ChildNodes
+                 ?.Where(cn => cn.Name == "a")
+                 ?.FirstOrDefault()
+                 ?.GetAttributeValue("href", "")) ?? string.Empty;
         }
 
         private List<SubjectItemDto> GetSubjectArray(string input)
@@ -538,26 +422,6 @@ namespace Scraper.Service.Scrapers
                     }));
 
             return dto;
-        }
-
-        private List<AuthorDto> GetAuthors(HtmlNode authorNode)
-        {
-            List<AuthorDto> authors = new List<AuthorDto>();
-            var authorNodes = authorNode.ChildNodes.Where(n => n.Name == "a").ToList();
-
-            if (authorNodes == null || authorNodes.Count < 1)
-                return authors;
-
-            foreach (var node in authorNodes)
-            {
-                authors.Add(new AuthorDto()
-                {
-                    FullName = node.InnerText.Trim(),
-                    ContextUrl = node.GetAttributeValue("href", "")
-                });
-            }
-
-            return authors;
         }
 
         #endregion Private

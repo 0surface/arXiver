@@ -63,7 +63,7 @@ namespace Scraper.UnitTests.Service
             HtmlDocument doc = _articleListTestBuilder.ArticleList_Catchup_SubjectGroup_HtmlDocument();
             int expected = 2045;
 
-            var sut = _scraper.ScrapeCatchUpArticleList(doc, true).Count();
+            var sut = _scraper.ScrapeCatchUpArticleList(doc, true).Item1.Count();
 
             Assert.Equal(sut, expected);
         }
@@ -75,7 +75,8 @@ namespace Scraper.UnitTests.Service
             int expected = 1010;
 
             var sut = _scraper.ScrapeCatchUpArticleList(doc, true)
-                                 .Where(r => r.ArxivIdLabel == "replaced").Count();
+                                .Item1
+                                .Where(r => r.ArxivIdLabel == "replaced").Count();
 
             Assert.Equal(sut, expected);
         }

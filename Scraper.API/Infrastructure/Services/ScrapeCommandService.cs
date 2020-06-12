@@ -16,8 +16,7 @@ namespace Scraper.API.Infrastructure.Services
     {
         Task<int> SubmissionsBySubjectCodeAsync(string url, string subjectCode, CancellationToken cancellationToken);
         Task<int> SubmissionsBySubjectGroupAsync(string url, string subjectGroup, CancellationToken cancellationToken);
-        Task<int> CatchupBySubjectGroupAsync(string url, string subjectGroup, string startDay, string startMonth,
-                                                  string startYear, string returnAmount, CancellationToken cancellationToken);
+        Task<(int, string)> CatchupBySubjectGroupAsync(string url, CancellationToken cancellationToken);
     }
 
     public class ScrapeCommandService : IScrapeCommandService
@@ -111,17 +110,19 @@ namespace Scraper.API.Infrastructure.Services
             }
         }
 
-        public async Task<int> CatchupBySubjectGroupAsync(string url, string subjectGroup, string startDay, string startMonth,
-                                                  string startYear, string returnAmount, CancellationToken cancellationToken)
+        public async Task<(int, string)> CatchupBySubjectGroupAsync(string url, CancellationToken cancellationToken)
         {
             try
             {
-                List<ArticleItemDto> dtoList =
+                (List<ArticleItemDto>,string) dtoList_continueUrl =
                     await _articleListScraper.GetCatchUpArticles(url, true, cancellationToken);
 
-                List<Article> articles = MapArticlesToDomain(dtoList);
+                string continueUrl = dtoList_continueUrl.Item2;
 
-                if (articles == null) return 0;
+                List<Article> articles = MapArticlesToDomain(dtoList_continueUrl.Item1);
+
+                if (articles == null) 
+                    return (0, string.Empty);
 
                 // Only include in Catchup only
                 List<Article> catchups = articles
@@ -139,11 +140,14 @@ namespace Scraper.API.Infrastructure.Services
                        .ToList();
 
                 //Persist to Database
-                return _repo.SaveBySubjectGroup(newCatchups);
+                int success =  _repo.SaveBySubjectGroup(newCatchups);
+
+                return (success, continueUrl);
+
             }
             catch (Exception)
             {
-                return -1;
+                return (-1, string.Empty);
             }
         }
 
