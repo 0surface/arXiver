@@ -35,10 +35,14 @@ namespace Scraper.API.Controllers
 
             string newSubmissionsUrl = $"{baseUrl}/list/{subjectCode}/new";
 
-            int result = await _scrapeCommandService.SubmissionsBySubjectCodeAsync(newSubmissionsUrl, subjectCode, cancellationToken);
+            var result = await _scrapeCommandService.SubmissionsBySubjectCodeAsync(newSubmissionsUrl, subjectCode, cancellationToken);
 
-            return result >= 1 ? Ok() :
-                  (result == 0) ? NoContent() : StatusCode((int)HttpStatusCode.InternalServerError);
+            if (result.Count > 0)
+                return Ok();
+            else if (result.IsSucess)
+                return NoContent();
+            else                
+                return StatusCode((int)HttpStatusCode.InternalServerError);
         }
 
 
@@ -54,10 +58,14 @@ namespace Scraper.API.Controllers
 
             string newSubmissionsUrl = $"{baseUrl}/list/{subjectGroup}/new";
 
-            int result = await _scrapeCommandService.SubmissionsBySubjectGroupAsync(newSubmissionsUrl, subjectGroup, cancellationToken);
+            var result = await _scrapeCommandService.SubmissionsBySubjectGroupAsync(newSubmissionsUrl, subjectGroup, cancellationToken);
 
-            return result >= 1 ? Ok() :
-                  (result == 0) ? NoContent() : StatusCode((int)HttpStatusCode.InternalServerError);
+            if (result.Count > 0)
+                return Ok();
+            else if (result.IsSucess)
+                return NoContent();
+            else
+                return StatusCode((int)HttpStatusCode.InternalServerError);
         }
 
         [HttpPost("catchupbygroup")]
@@ -73,19 +81,18 @@ namespace Scraper.API.Controllers
 
             string catchUpUrl = $"{baseUrl}/catchup?smonth={startMonth}&group=grp_&sday={startDay}&num={returnAmount}&archive={subjectGroup}&method=with&syear={startYear}";
 
-            (int, string) repoResult_ContinueUrl =
-                await _scrapeCommandService.CatchupBySubjectGroupAsync(catchUpUrl, cancellationToken);
+            var result = await _scrapeCommandService.CatchupBySubjectGroupAsync(catchUpUrl, cancellationToken);
 
-            int repoResult = repoResult_ContinueUrl.Item1;
+            if (result.Count > 0)
+            {
+                return Content($"{baseUrl}{result.ContinueUrl}");
+            }
+            else if (result.IsSucess)
+            {
+                return NoContent();
+            }
 
-            string continueUrl = $"{baseUrl}{repoResult_ContinueUrl.Item2}";
-
-            if (repoResult >= 1)
-                return Content(continueUrl);
-
-            return (repoResult == 0) ?
-                  NoContent()
-                : StatusCode((int)HttpStatusCode.InternalServerError);
+            return StatusCode((int)HttpStatusCode.InternalServerError);
         }
     }
 }

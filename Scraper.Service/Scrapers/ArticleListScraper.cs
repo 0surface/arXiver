@@ -15,13 +15,13 @@ namespace Scraper.Service.Scrapers
         int GetArticleListEntryCount(HtmlDocument htmlDocument, string[] identifierStrings
             , string articleListCountSelector = "//small");
 
-        List<ArticleItemDto> ScrapeArticleList(HtmlDocument htmlDocument, bool includeAbstract);
+        ScrapeResultDto<ArticleItemDto> ScrapeArticleList(ScrapeResultDto<ArticleItemDto> request, HtmlDocument htmlDocument, bool includeAbstract = true);
 
-        (List<ArticleItemDto>, string) ScrapeCatchUpArticleList(HtmlDocument htmlDocument, bool includeAbstract);
+        ScrapeResultDto<ArticleItemDto> ScrapeCatchUpArticleList(ScrapeResultDto<ArticleItemDto> request, HtmlDocument htmlDocument, bool includeAbstract);
 
-        Task<List<ArticleItemDto>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
+        Task<ScrapeResultDto<ArticleItemDto>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
 
-        Task<(List<ArticleItemDto>, string)> GetCatchUpArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
+        Task<ScrapeResultDto<ArticleItemDto>>  GetCatchUpArticles(string url, bool includeAbstract, CancellationToken cancellationToken);
     }
 
     public class ArticleListScraper : IArticleListScraper
@@ -70,12 +70,8 @@ namespace Scraper.Service.Scrapers
             }
         }
 
-        public (List<ArticleItemDto>, string) ScrapeCatchUpArticleList(HtmlDocument htmlDocument, bool includeAbstract = true)
+        public ScrapeResultDto<ArticleItemDto> ScrapeCatchUpArticleList(ScrapeResultDto<ArticleItemDto> request, HtmlDocument htmlDocument, bool includeAbstract = true)
         {
-            List<ArticleItemDto> result = new List<ArticleItemDto>();
-            string continueUrl = string.Empty;
-
-            List<int> eachPass = new List<int>();
             try
             {
                 var parsedHtml = (from info in htmlDocument.DocumentNode.SelectNodes("//div[@id='dlpage']")
@@ -92,9 +88,9 @@ namespace Scraper.Service.Scrapers
                                   }).ToList();
 
                 if (parsedHtml == null || parsedHtml.Count < 0)
-                    return (result, continueUrl);
+                    return request;
 
-                continueUrl = GetCatchUpContinueUrl(parsedHtml[0]?.ol?.ChildNodes);
+                request.ContinueUrl = GetCatchUpContinueUrl(parsedHtml[0]?.ol?.ChildNodes);
 
                 //Html Page title information -used to eastablish the Scrape Context Enum (New, Recent, Catchup etc...)
                 var pageInfo = parsedHtml[0].h1?.InnerText;
@@ -107,85 +103,79 @@ namespace Scraper.Service.Scrapers
                        parsedHtml[i].dl.Descendants("dt").ToArray(),
                        parsedHtml[i].dl.Descendants("dd").ToArray(),
                        true);
-
-                    eachPass.Add(list.Count);
-                    result?.AddRange(list);
+                    request.Result.AddRange(list);
                 }
             }
             catch (Exception) { }
 
-            return (result, continueUrl);
+            return request;
         }
 
-        public List<ArticleItemDto> ScrapeArticleList(HtmlDocument htmlDocument, bool includeAbstract = true)
+        public async Task<ScrapeResultDto<ArticleItemDto>> GetCatchUpArticles(string url, bool includeAbstract, CancellationToken cancellationToken)
         {
-            var parseMain = (from info in htmlDocument.DocumentNode.SelectNodes("//div[@id='dlpage']")
-                             from h3Element in info.SelectNodes("h3")
-                             let dlElement = h3Element.GetNextSibling("dl")
-                             let dte = dlElement.SelectNodes($"//span[@class='list-identifier']")
-                             let dde = dlElement.SelectNodes($"//div[@class='meta']")
-                             where dlElement != null
-                             select new
-                             {
-                                 h3 = h3Element,
-                                 dl = dlElement,
+            ScrapeResultDto<ArticleItemDto> result = new ScrapeResultDto<ArticleItemDto>() { RequestUrl = url };
 
-                                 dt = dlElement.Descendants("dt"),
-                                 dd = dlElement.Descendants("dd")
-                             }).ToList();
+            HtmlDocument doc = await HtmlAgilityHelper.GetHtmlDocument(url, cancellationToken);
 
-            List<ArticleItemDto> result = new List<ArticleItemDto>();
+            return (doc == null) ?
+                result
+                : ScrapeCatchUpArticleList(result, doc, includeAbstract);
+        }
 
-            int loopCount = parseMain.Count();
-
-            for (int i = 0; i < loopCount; i++)
+        public ScrapeResultDto<ArticleItemDto> ScrapeArticleList(ScrapeResultDto<ArticleItemDto> request, HtmlDocument htmlDocument, bool includeAbstract = true)
+        {
+            try
             {
-                var h3Elem = parseMain[i].h3.InnerText;
-                var dt_list = parseMain[i].dl.Descendants("dt").ToArray();
-                var dd_list = parseMain[i].dl.Descendants("dd").ToArray();
+                var parseMain = (from info in htmlDocument.DocumentNode.SelectNodes("//div[@id='dlpage']")
+                                 from h3Element in info.SelectNodes("h3")
+                                 let dlElement = h3Element.GetNextSibling("dl")
+                                 let dte = dlElement.SelectNodes($"//span[@class='list-identifier']")
+                                 let dde = dlElement.SelectNodes($"//div[@class='meta']")
+                                 where dlElement != null
+                                 select new
+                                 {
+                                     h3 = h3Element,
+                                     dl = dlElement,
 
-                var list = ProcessElems(h3Elem, dt_list, dd_list, includeAbstract);
+                                     dt = dlElement.Descendants("dt"),
+                                     dd = dlElement.Descendants("dd")
+                                 }).ToList();
 
-                if (list != null && list.Count > 0)
+                if (parseMain == null || parseMain.Count() < 1)
+                    return request;
+
+                for (int i = 0; i < parseMain.Count(); i++)
                 {
-                    result.AddRange(list);
+                    var h3Elem = parseMain[i].h3.InnerText;
+                    var dt_list = parseMain[i].dl.Descendants("dt").ToArray();
+                    var dd_list = parseMain[i].dl.Descendants("dd").ToArray();
+
+                    var list = ProcessElems(h3Elem, dt_list, dd_list, includeAbstract);
+
+                    if (list != null && list.Count > 0)
+                    {
+                        request.Result.AddRange(list);
+                        request.IsSucess = true;
+                    }
                 }
             }
+            catch (Exception)
+            {
+                request.IsSucess = false;
+            }
 
-            return result;
+            return request;
         }
 
-        public async Task<List<ArticleItemDto>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken)
+        public async Task<ScrapeResultDto<ArticleItemDto>> GetArticles(string url, bool includeAbstract, CancellationToken cancellationToken)
         {
-            HtmlDocument doc = await HtmlAgilityHelper.GetHtmlDocument(url, cancellationToken);
+            ScrapeResultDto<ArticleItemDto> result = new ScrapeResultDto<ArticleItemDto>() { RequestUrl = url };
 
-            if (doc == null)
-                return new List<ArticleItemDto>();
+            HtmlDocument htmlDocument = await HtmlAgilityHelper.GetHtmlDocument(url, cancellationToken);
 
-            var articles = ScrapeArticleList(doc, includeAbstract);
-
-            return articles != null && articles.Count > 0
-                ? articles
-                : new List<ArticleItemDto>();
+            return htmlDocument == null ? result :  ScrapeArticleList(result, htmlDocument, includeAbstract);
         }
-
-        public async Task<(List<ArticleItemDto>, string)> GetCatchUpArticles(string url, bool includeAbstract, CancellationToken cancellationToken)
-        {
-            HtmlDocument doc = await HtmlAgilityHelper.GetHtmlDocument(url, cancellationToken);
-            string continueUrl = string.Empty;
-
-
-            if (doc == null)
-                return (new List<ArticleItemDto>(), continueUrl);
-
-            var result = ScrapeCatchUpArticleList(doc, includeAbstract);
-
-            return result.Item1 != null && result.Item1.Count > 0
-                ? result
-                : (new List<ArticleItemDto>(), continueUrl);
-        }
-
-
+        
         #region Private
 
         private List<ArticleItemDto> ProcessCatchUpElements(string pageTitleInfo, string dateInfo,

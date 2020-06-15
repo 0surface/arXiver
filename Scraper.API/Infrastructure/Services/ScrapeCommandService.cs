@@ -14,9 +14,9 @@ namespace Scraper.API.Infrastructure.Services
 {
     public interface IScrapeCommandService
     {
-        Task<int> SubmissionsBySubjectCodeAsync(string url, string subjectCode, CancellationToken cancellationToken);
-        Task<int> SubmissionsBySubjectGroupAsync(string url, string subjectGroup, CancellationToken cancellationToken);
-        Task<(int, string)> CatchupBySubjectGroupAsync(string url, CancellationToken cancellationToken);
+        Task<ScrapeResultDto<Article>> SubmissionsBySubjectCodeAsync(string url, string subjectCode, CancellationToken cancellationToken);
+        Task<ScrapeResultDto<Article>> SubmissionsBySubjectGroupAsync(string url, string subjectGroup, CancellationToken cancellationToken);
+        Task<ScrapeResultDto<Article>> CatchupBySubjectGroupAsync(string url, CancellationToken cancellationToken);
     }
 
     public class ScrapeCommandService : IScrapeCommandService
@@ -41,23 +41,30 @@ namespace Scraper.API.Infrastructure.Services
             _articleListScraper = articleListScraper;
         }
 
-        public async Task<int> SubmissionsBySubjectCodeAsync(string url, string subjectCode, CancellationToken cancellationToken)
+        public async Task<ScrapeResultDto<Article>> SubmissionsBySubjectCodeAsync(string url, string subjectCode, CancellationToken cancellationToken)
         {
+            ScrapeResultDto<Article> newSubmissionResult = new ScrapeResultDto<Article>();
             try
             {
-                List<ArticleItemDto> dtoList =
+                ScrapeResultDto<ArticleItemDto> scrapeResult =
                     await _articleListScraper.GetArticles(url, true, cancellationToken);
 
-                List<Article> articles = MapArticlesToDomain(dtoList);
+                newSubmissionResult.ContinueUrl = scrapeResult.ContinueUrl;
+                newSubmissionResult.RequestUrl = scrapeResult.RequestUrl;
 
-                if (articles == null) return 0;
+                List<Article> articles = MapArticlesToDomain(scrapeResult.Result);
+
+                if (articles == null)
+                {
+                    return newSubmissionResult;
+                }
 
                 //Only include Submisisons
                 List<Article> submissions = articles
                     .Where(a => a.ScrapeContext == ArticleScrapeContextEnum.Submission)
                     ?.ToList();
 
-                //Filter existing Articles
+                //Fetch existing Articles scraped today
                 var existingIds = _context.SubjectItemArticles
                                    .Where(j => j.Article.DisplayDate.Date == DateTime.Now.Date
                                            //&& j.SubjectItem.Code == subjectCode
@@ -65,67 +72,92 @@ namespace Scraper.API.Infrastructure.Services
                                    ?.Select(a => a.Article.ArxivId)
                                    ?.ToList();
 
-                var newSubmissions = submissions.Where(a => !existingIds.Contains(a.ArxivId)).ToList();
+                //Filter out new articles not in database
+                List<Article> newSubmissions = submissions
+                            .Where(a => !existingIds.Contains(a.ArxivId))
+                            .ToList();
 
-                return _repo.SaveBySubjectGroup(newSubmissions);
+                int repoResult = _repo.SaveBySubjectGroup(newSubmissions);
+                newSubmissionResult.IsSucess = repoResult >= 1;
+                newSubmissionResult.Result = newSubmissions;
+
+                return newSubmissionResult;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return -1;
+                newSubmissionResult.Exception = ex;
+                return newSubmissionResult;
             }
         }
 
-        public async Task<int> SubmissionsBySubjectGroupAsync(string url, string subjectGroup, CancellationToken cancellationToken)
+        public async Task<ScrapeResultDto<Article>> SubmissionsBySubjectGroupAsync(string url, string subjectGroup, CancellationToken cancellationToken)
         {
+            ScrapeResultDto<Article> newSubmissionResult = new ScrapeResultDto<Article>();
             try
             {
-                List<ArticleItemDto> dtoList =
+                ScrapeResultDto<ArticleItemDto> scrapeResult =
                     await _articleListScraper.GetArticles(url, true, cancellationToken);
 
-                List<Article> articles = MapArticlesToDomain(dtoList);
+                newSubmissionResult.ContinueUrl = scrapeResult.ContinueUrl;
+                newSubmissionResult.RequestUrl = scrapeResult.RequestUrl;
 
-                if (articles == null) return 0;
+                List<Article> articles = MapArticlesToDomain(scrapeResult.Result);
+
+                if (articles == null)
+                {
+                    return newSubmissionResult;
+                }
 
                 //Only include Submisisons
                 List<Article> submissions = articles
                         .Where(a => a.ScrapeContext == ArticleScrapeContextEnum.Submission)
                         ?.ToList();
 
-                //Filter existing Articles
+                //Fetch existing Articles scraped today
                 var existingArxivIds = await _context.SubjectItemArticles
                                        .Where(j => j.Article.DisplayDate.Date == DateTime.Now.Date)
                                        ?.Select(a => a.Article.ArxivId)
                                        ?.ToListAsync();
 
+                //Filter out new articles not in database
                 List<Article> newSubmissions = submissions
                         .Where(a => !existingArxivIds.Contains(a.ArxivId))
                         .ToList();
 
                 //Persist to Database
-                return _repo.SaveBySubjectGroup(newSubmissions);
+                int repoResult =  _repo.SaveBySubjectGroup(newSubmissions);
+                newSubmissionResult.IsSucess = repoResult >= 1;
+                newSubmissionResult.Result = newSubmissions;
+
+                return newSubmissionResult;
+
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return -1;
+                newSubmissionResult.Exception = ex;
+                return newSubmissionResult;
             }
         }
 
-        public async Task<(int, string)> CatchupBySubjectGroupAsync(string url, CancellationToken cancellationToken)
+        public async Task<ScrapeResultDto<Article>> CatchupBySubjectGroupAsync(string url, CancellationToken cancellationToken)
         {
+            ScrapeResultDto<Article> catcupResult = new ScrapeResultDto<Article>();
+
             try
             {
-                (List<ArticleItemDto>,string) dtoList_continueUrl =
+                ScrapeResultDto<ArticleItemDto> dtoResult =
                     await _articleListScraper.GetCatchUpArticles(url, true, cancellationToken);
 
-                string continueUrl = dtoList_continueUrl.Item2;
+                catcupResult.ContinueUrl = dtoResult.ContinueUrl;
+                catcupResult.RequestUrl = dtoResult.RequestUrl;
+              
+                List<Article> articles = MapArticlesToDomain(dtoResult.Result);
 
-                List<Article> articles = MapArticlesToDomain(dtoList_continueUrl.Item1);
-
-                if (articles == null) 
-                    return (0, string.Empty);
+                if (articles == null || articles.Count == 0)
+                    return catcupResult;
 
                 // Only include in Catchup only
-                List<Article> catchups = articles
+                List<Article> catchups = catcupResult.Result
                         .Where(a => a.ScrapeContext == ArticleScrapeContextEnum.CatchUp)
                         ?.ToList();
 
@@ -142,12 +174,15 @@ namespace Scraper.API.Infrastructure.Services
                 //Persist to Database
                 int success =  _repo.SaveBySubjectGroup(newCatchups);
 
-                return (success, continueUrl);
+                catcupResult.IsSucess = success >= 1;
+                catcupResult.Result = newCatchups;
 
+                return catcupResult;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return (-1, string.Empty);
+                catcupResult.Exception =ex;
+                return catcupResult;
             }
         }
 
