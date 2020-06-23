@@ -1,5 +1,7 @@
-﻿using HtmlAgilityPack;
+﻿using FluentAssertions;
+using HtmlAgilityPack;
 using Scraper.Service.Scrapers;
+using Scraper.Types;
 using System.Linq;
 using Xunit;
 using static Scraper.UnitTests.Service.Builders;
@@ -34,13 +36,15 @@ namespace Scraper.UnitTests.Service
         {
             //Arrange
             HtmlDocument doc = _articleListTestBuilder.ArticleList_withoutAbstract_HtmlDocument();
+            ScrapeResultDto<ArticleItemDto> request = new ScrapeResultDto<ArticleItemDto>();
             int expected = 25;
 
             //Act
-            var sut = _scraper.ScrapeArticleList(doc, false).Count;
+            var sut = _scraper.ScrapeArticleList(request,doc, false);
 
             //Assert
-            Assert.Equal(sut, expected);
+            sut.Should().NotBeNull();
+            sut.Result.Count().Should().Be(expected);
         }
 
         [Fact]
@@ -48,37 +52,44 @@ namespace Scraper.UnitTests.Service
         {
             //Arrange
             HtmlDocument doc = _articleListTestBuilder.ArticleList_withAbstract_HtmlDocument();
+            ScrapeResultDto<ArticleItemDto> request = new ScrapeResultDto<ArticleItemDto>();
             string expected = _articleListTestBuilder.WithAbstractHtml_ArticleItem2_AbstractText();
 
             //Act           
-            var sut = _scraper.ScrapeArticleList(doc, true)[1].AbstractText;
+            var sut = _scraper.ScrapeArticleList(request, doc, true);
 
             //Assert
-            Assert.Equal(sut, expected);
+            sut.Result.Should().NotBeEmpty();
+            sut.Result.Should().HaveCountGreaterOrEqualTo(2);
+            Assert.Equal(sut.Result[1].AbstractText, expected);
         }
 
         [Fact]
-        public void CatchupArchiveArticles_Extracts_AllAtriclesinDocument()
+        public void CatchupArchiveArticles_Extracts_AllArticlesIn_HtmlDocument()
         {
             HtmlDocument doc = _articleListTestBuilder.ArticleList_Catchup_SubjectGroup_HtmlDocument();
+            ScrapeResultDto<ArticleItemDto> request = new ScrapeResultDto<ArticleItemDto>();
             int expected = 2045;
 
-            var sut = _scraper.ScrapeCatchUpArticleList(doc, true).Item1.Count();
+            var sut = _scraper.ScrapeCatchUpArticleList(request, doc, true);
 
-            Assert.Equal(sut, expected);
+            sut.Should().NotBeNull();
+            sut.Result.Should().HaveCountGreaterOrEqualTo(2);
+            sut.Result.Count().Should().Be(expected);
         }
 
         [Fact]
         public void CatchupArchiveArticles_ExtractsArxivIdLabelText_AllArticlesLabeledAsReplaced()
         {
             HtmlDocument doc = _articleListTestBuilder.ArticleList_Catchup_SubjectGroup_HtmlDocument();
+            ScrapeResultDto<ArticleItemDto> request = new ScrapeResultDto<ArticleItemDto>();
             int expected = 1010;
 
-            var sut = _scraper.ScrapeCatchUpArticleList(doc, true)
-                                .Item1
+            var sut = _scraper.ScrapeCatchUpArticleList(request, doc, true)
+                                .Result
                                 .Where(r => r.ArxivIdLabel == "replaced").Count();
 
-            Assert.Equal(sut, expected);
+            sut.Should().Be(expected);
         }
     }
 }
